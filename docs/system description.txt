@@ -1,0 +1,434 @@
+Below is a complete developer functional document describing the system behavior and architecture based on everything we discussed.
+This document focuses on system functionality, workflows, and modules, intentionally excluding database schemas or table definitions.
+
+Multi-Tenant School Management & Learning System
+Developer Functional Specification
+1. System Overview
+The platform is a multi-tenant School Management System (SMS) designed to support schools from Infant level (ECD) through Primary and Secondary education within a single unified system.
+The system combines three major components:
+1. School Administration System
+2. Learning Management System (LMS)
+3. Academic Assessment and Reporting Engine
+Each school operates as an independent tenant within the platform while being managed centrally by a Super Administrator.
+The system is designed to support multiple roles, each with specific responsibilities and controlled access to system resources.
+
+2. System Roles and Portals
+The system contains several user portals corresponding to different roles within the educational ecosystem.
+2.1 Super Administrator Portal
+The Super Administrator manages the entire platform across all schools.
+Responsibilities include:
+* Creating and managing schools
+* Configuring platform-level settings
+* Managing subscription plans or service packages
+* Monitoring system usage across schools
+* Viewing platform-wide analytics
+* Managing system updates and maintenance
+* Managing global configurations such as grading defaults and academic structures
+This portal is intended only for platform owners or system administrators.
+
+2.2 School Administrator Portal
+Each school has a dedicated administrator responsible for managing the school's operations within the platform.
+Responsibilities include:
+* Managing teachers
+* Registering and managing students
+* Managing parents
+* Creating classes and assigning class teachers
+* Creating departments
+* Creating and assigning subjects
+* Creating academic terms and academic years
+* Creating and managing assessments and exams
+* Managing timetables
+* Publishing report cards
+* Monitoring attendance
+* Managing learning materials
+* Configuring school-specific academic policies
+School administrators oversee all academic and administrative activities for their school.
+
+2.3 Head of Department (HOD) Portal
+Departments represent subject groupings within the school such as:
+* Languages
+* Sciences
+* Commercial subjects
+* Arts
+Each department has a Head of Department responsible for overseeing the academic performance of that department.
+Responsibilities include:
+* Monitoring subject teachers within the department
+* Reviewing student performance for departmental subjects
+* Monitoring subject pass rates
+* Reviewing and validating marks entered by teachers
+* Providing departmental reports and analytics
+* Uploading departmental learning materials
+* Supporting teachers in curriculum delivery
+HODs function as academic supervisors for subject areas.
+
+2.4 Teacher Portal
+Teachers interact with the system for both academic instruction and student evaluation.
+Teachers may teach multiple subjects across multiple classes.
+Responsibilities include:
+Class Management
+* Viewing assigned classes
+* Viewing class rosters
+* Accessing student information
+Attendance Recording
+* Recording daily attendance for students
+* Marking students as present, absent, late, or excused
+* Adding remarks where necessary
+Academic Assessments
+* Entering student marks for tests and exams
+* Adding comments on student performance
+* Monitoring subject performance trends
+Assignments and Homework
+* Creating homework assignments
+* Creating projects or revision tasks
+* Setting submission deadlines
+* Reviewing and grading student submissions
+* Providing feedback to students
+Learning Content
+* Uploading recorded lessons
+* Uploading educational materials
+* Providing supporting documents for students
+Practice Exams
+* Creating practice tests
+* Creating quizzes and exercises
+* Reviewing quiz performance
+Teachers are the primary academic contributors to the system.
+Class Teacher Role
+A Class Teacher is a teacher assigned to be responsible for the overall management of a specific class.
+Each class must have one designated class teacher.
+Example:
+ClassClass TeacherGrade 3AMr. DubeGrade 3BMrs. NcubeForm 2AMr. MoyoThe class teacher acts as the academic supervisor for that class.
+
+Responsibilities of the Class Teacher
+The class teacher has responsibilities that go beyond subject teaching.
+1. Student Monitoring
+The class teacher can:
+* View all students in the class
+* Monitor student performance across all subjects
+* Monitor attendance records
+* Identify struggling students
+This allows the teacher to understand the overall progress of each learner.
+
+2. Attendance Oversight
+While subject teachers may record attendance during lessons, the class teacher has authority to:
+* Review attendance records
+* Identify frequent absences
+* Monitor attendance summaries for the entire class
+This ensures proper student participation tracking.
+
+3. Academic Performance Review
+The class teacher can view:
+* All subject marks entered by teachers
+* Student averages
+* Class averages
+* Student rankings
+This allows them to monitor overall class performance.
+
+4. Final Report Comment
+One of the most important roles of the class teacher is writing the final comment on the student report card.
+The report contains two types of comments:
+Subject Teacher Comment
+Each subject teacher may write a comment related to the student's performance in that subject.
+Example:
+"John shows strong problem-solving skills but needs to practice algebra."
+Class Teacher Final Comment
+The class teacher writes the overall evaluation of the student.
+Example:
+"John has shown steady improvement throughout the term and should continue working hard to maintain progress."
+This comment appears at the bottom of the report card.
+
+5. Report Approval
+The class teacher is responsible for reviewing the results before they are finalized.
+Responsibilities include:
+* Reviewing subject marks entered by teachers
+* Ensuring all subjects have marks
+* Reviewing calculated averages
+* Adding final student comments
+* Approving reports for publishing
+This ensures academic reports are verified before release.
+
+6. Promotion Recommendation
+The class teacher may also recommend:
+* Promotion to the next class
+* Academic support for struggling students
+* Special academic attention
+This recommendation may appear in the final report.
+Example:
+"Promoted to Grade 4."
+or
+"Requires additional support in Mathematics."
+
+7. Class Management Features
+The class teacher dashboard should include:
+Class Overview
+* List of students
+* Class attendance summary
+* Class average performance
+Student Monitoring
+* Student performance across subjects
+* Student attendance history
+* Assignment completion
+Reports
+* Review report cards
+* Add final comments
+* Approve reports
+
+8. Relationship with Other Roles
+The class teacher works between several other roles.
+Teachers
+Subject teachers provide marks and subject comments.
+HOD (Head of Department)
+HODs oversee subject performance across departments.
+School Administrator
+The school administrator manages the academic structure and publishes reports.
+Parents and Students
+Parents and students ultimately receive the finalized reports.
+
+9. Class Teacher Workflow
+The class teacher workflow during a school term typically follows this process:
+1. Teachers teach lessons and record attendance.
+2. Teachers record marks for assessments.
+3. Continuous assessments accumulate during the term.
+4. Exams are conducted.
+5. The system calculates subject results.
+6. Subject teachers add comments.
+7. The class teacher reviews the class results.
+8. The class teacher adds final comments for each student.
+9. The class teacher approves the reports.
+10. The school administrator publishes the reports.
+11. Students and parents access the reports.
+
+10. Importance of the Class Teacher Role
+The class teacher serves as the primary academic guardian of the class.
+Their role ensures:
+* Student progress is monitored holistically
+* Attendance problems are identified
+* Academic results are verified
+* Students receive meaningful feedback
+This role reflects how schools traditionally operate and ensures the digital system mirrors real-world educational structures.
+
+
+2.5 Student Portal
+Students use the platform primarily for learning and monitoring their academic progress.
+Features available to students include:
+Learning Access
+* Viewing recorded lessons
+* Accessing course materials
+* Viewing subject resources
+Assignments
+* Viewing assigned homework
+* Submitting homework
+* Viewing teacher feedback
+Practice Exams
+* Taking practice quizzes
+* Reviewing quiz scores
+* Monitoring learning progress
+Academic Reports
+* Viewing report cards
+* Viewing subject marks
+* Viewing grades and averages
+Attendance Monitoring
+* Viewing attendance summaries
+Students are able to track their learning progress throughout the academic term.
+
+2.6 Parent Portal
+Parents are able to monitor their children's academic progress and school participation.
+A parent account may be linked to multiple students.
+Parents can:
+* View report cards
+* Monitor student attendance
+* Track homework completion
+* View learning materials
+* Monitor academic performance trends
+* Receive announcements and notifications from the school
+This portal provides transparency between schools and families.
+
+3. Academic Structure
+The system must support the Zimbabwean education system from early childhood to advanced secondary levels.
+The academic structure includes:
+* Early Childhood Development (ECD)
+* Primary School Grades
+* Secondary School Forms
+Schools may have multiple classes per grade level, often referred to as streams.
+Example:
+* Grade 3A
+* Grade 3B
+* Grade 3C
+Each class has a designated class teacher responsible for overall student supervision and reporting.
+
+4. Teaching Structure
+Teachers may be assigned to:
+* Multiple subjects
+* Multiple classes
+For example, a teacher may teach:
+* Mathematics to Grade 3A
+* Mathematics to Grade 3B
+* Science to Grade 4A
+This flexible assignment structure ensures the system supports realistic school staffing models.
+
+5. Assessment System
+The system supports a flexible academic assessment structure that reflects real school evaluation processes.
+Schools may create multiple types of assessments including:
+* Monthly tests
+* Exercises
+* Continuous assessments
+* Mid-term examinations
+* Final examinations
+Assessments are organized into categories to support continuous assessment and formal examinations.
+Continuous assessments contribute toward the final subject mark.
+
+6. Continuous Assessment and Final Exams
+Student subject performance is calculated using two major components:
+Continuous Assessment
+Continuous assessment includes multiple smaller evaluations such as:
+* Monthly tests
+* Exercises
+* Homework assessments
+* Practice tests
+These may be averaged or calculated using a median score depending on school policy.
+Final Examination
+Final examinations represent larger, more formal tests administered at the end of a learning period.
+
+7. Result Calculation
+The final subject result is typically calculated using weighted components such as:
+* Continuous assessment score
+* Final examination score
+The system automatically calculates:
+* Final subject marks
+* Subject grades
+* Total marks
+* Student averages
+These results are used to generate report cards.
+
+8. Report Card Generation
+Report cards summarize a student's academic performance for a given academic period.
+Each report card includes:
+Academic Results
+* Subject marks
+* Continuous assessment score
+* Final exam score
+* Final subject mark
+* Grade
+Attendance Summary
+* Total days attended
+* Total absences
+* Late records
+Teacher Comments
+Each subject teacher may add comments describing the student's performance in that subject.
+Class Teacher Final Comment
+The class teacher adds a final comment summarizing the student's overall performance and progress.
+
+9. Attendance System
+The system records student attendance on a daily basis.
+Teachers can record attendance during class sessions.
+Attendance records include:
+* Present
+* Absent
+* Late
+* Excused
+Attendance summaries are displayed in report cards and student dashboards.
+This allows schools and parents to track student participation and discipline.
+
+10. Homework and Assignments
+Teachers can create assignments for students within their classes.
+Assignments may include:
+* Homework tasks
+* Projects
+* Exercises
+* Revision tasks
+Assignments include:
+* Instructions
+* Due dates
+* Maximum scores
+* Submission formats
+Students can submit assignments digitally through the system.
+Teachers review submissions and provide scores and feedback.
+
+11. Recorded Lessons and Learning Materials
+Teachers may upload learning content to support student learning.
+Content may include:
+* Video lessons
+* Audio recordings
+* Documents
+* Presentation slides
+These resources allow students to revisit lessons outside the classroom.
+Recorded lessons form part of the system's E-Learning capability.
+
+12. Practice Exams and Quizzes
+Teachers may create practice exams that students can take for revision.
+Practice exams may contain different question types including:
+* Multiple choice questions
+* True or false questions
+* Short answer questions
+Practice exams may be automatically graded where possible.
+Results help students identify areas needing improvement.
+Practice exams may optionally contribute to continuous assessment depending on school configuration.
+
+13. Student Performance Analytics
+The system provides analytical insights into academic performance including:
+* Student averages
+* Class averages
+* Subject pass rates
+* Department performance
+* Student ranking within classes
+These analytics help school leadership monitor academic outcomes.
+
+14. Learning Workflow
+A typical academic workflow operates as follows:
+1. Teachers deliver lessons and upload learning materials.
+2. Teachers assign homework or exercises.
+3. Students complete assignments and take quizzes.
+4. Teachers record attendance and marks.
+5. Continuous assessments accumulate during the term.
+6. Schools conduct formal examinations.
+7. The system calculates results automatically.
+8. Teachers add subject comments.
+9. Class teachers add final comments.
+10. School administrators publish report cards.
+11. Students and parents view results through their portals.
+
+15. System Architecture Layers
+The system can be understood in three functional layers.
+Learning Layer
+Responsible for delivering educational content.
+Includes:
+* Recorded lessons
+* Learning materials
+* Homework
+* Practice exams
+Assessment Layer
+Responsible for evaluating student performance.
+Includes:
+* Tests
+* Exams
+* Continuous assessments
+* Mark recording
+Reporting Layer
+Responsible for academic reporting and analytics.
+Includes:
+* Report cards
+* Attendance summaries
+* Teacher comments
+* Academic performance analytics
+
+16. Multi-Tenant Platform Design
+The system is built as a multi-tenant platform where multiple schools operate within the same infrastructure.
+Each school maintains its own:
+* students
+* teachers
+* classes
+* subjects
+* academic records
+Schools cannot access each other's data.
+This design enables the platform to scale to support many schools.
+
+17. System Goals
+The primary goals of the system are:
+* Digitize school administration
+* Support modern e-learning
+* Improve academic monitoring
+* Provide transparent student performance tracking
+* Enable communication between teachers, students, and parents
+* Provide scalable infrastructure for multiple schools
+
+If you want, the next step can be creating a complete system module map and feature roadmap, which will show every module required (about 80+ features) so development can be structured in phases like a real production SaaS platform.
+

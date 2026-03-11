@@ -1,0 +1,57 @@
+/* ========================================
+   TOAST ANIMATIONS - Pure CSS
+   ======================================== */
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover effect */
+.pointer-events-auto:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+/* Progress bar (optional) */
+.pointer-events-auto::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.3;
+  animation: progress 3s linear;
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}

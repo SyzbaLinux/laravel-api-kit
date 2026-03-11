@@ -48,6 +48,7 @@ final class AuthController extends ApiController
             return $this->unauthorized('Invalid credentials');
         }
 
+        $user->load('role');
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return $this->success([
@@ -67,7 +68,10 @@ final class AuthController extends ApiController
 
     public function me(Request $request): JsonResponse
     {
-        return $this->success(new UserResource($request->user()));
+        $user = $request->user();
+        $user->load('role');
+
+        return $this->success(new UserResource($user));
     }
 
     public function verifyEmail(VerifyEmailRequest $request): JsonResponse

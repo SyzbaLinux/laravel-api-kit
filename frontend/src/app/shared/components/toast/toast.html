@@ -1,0 +1,26 @@
+<div class="fixed top-6 right-6 z-[100] space-y-3 pointer-events-none">
+  <div
+    *ngFor="let toast of toasts"
+    [class]="getToastClass(toast.type)"
+    class="pointer-events-auto min-w-[320px] max-w-md rounded-lg shadow-2xl p-4 flex items-start gap-3 animate-slideIn">
+    
+    <!-- Icon -->
+    <div class="flex-shrink-0 mt-0.5">
+      <lucide-icon
+        [img]="getIcon(toast.type)"
+        [size]="22"
+        [class]="toast.type === 'success' ? 'text-[#008f45]' : toast.type === 'error' ? 'text-red-600' : 'text-blue-600'">
+      </lucide-icon>
+    </div>
+    
+    <!-- Message -->
+    <p class="flex-1 font-semibold text-sm leading-relaxed">{{ toast.message }}</p>
+    
+    <!-- Close Button -->
+    <button
+      (click)="remove(toast.id)"
+      class="flex-shrink-0 p-1.5 hover:bg-black/10 rounded-lg transition-colors">
+      <lucide-icon [img]="X" [size]="16"></lucide-icon>
+    </button>
+  </div>
+</div>
