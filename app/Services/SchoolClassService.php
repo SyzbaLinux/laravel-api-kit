@@ -31,7 +31,7 @@ final class SchoolClassService
 
     public function findById(int $id): SchoolClass
     {
-        return SchoolClass::query()->with(['classTeacher', 'academicYear', 'subjects'])->findOrFail($id);
+        return SchoolClass::query()->with(['classTeacher', 'academicYear', 'subjects', 'students'])->findOrFail($id);
     }
 
     public function create(SchoolClassData $data): SchoolClass
@@ -75,5 +75,27 @@ final class SchoolClassService
     public function removeSubject(SchoolClass $schoolClass, int $subjectId): void
     {
         $schoolClass->subjects()->detach($subjectId);
+    }
+
+    public function enrollStudent(SchoolClass $schoolClass, int $userId, ?int $academicYearId = null): void
+    {
+        $schoolClass->students()->syncWithoutDetaching([
+            $userId => [
+                'academic_year_id' => $academicYearId,
+                'enrolled_at' => now()->toDateString(),
+            ],
+        ]);
+    }
+
+    public function unenrollStudent(SchoolClass $schoolClass, int $userId): void
+    {
+        $schoolClass->students()->detach($userId);
+    }
+
+    public function assignClassTeacher(SchoolClass $schoolClass, int $teacherId): SchoolClass
+    {
+        $schoolClass->update(['class_teacher_id' => $teacherId]);
+
+        return $schoolClass->refresh()->load(['classTeacher', 'academicYear', 'subjects', 'students']);
     }
 }

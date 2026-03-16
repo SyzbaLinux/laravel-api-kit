@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\EnsureEmailVerified;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\LogApiRequests;
+use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'force.json' => ForceJsonResponse::class,
             'log.api' => LogApiRequests::class,
             'verified' => EnsureEmailVerified::class,
+            'tenant' => SetTenantContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,14 +1,20 @@
-import { Component, ChangeDetectionStrategy, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { LucideAngularModule, Plus, Edit, Trash2, X, School, Users, ChevronRight } from 'lucide-angular';
+import { LucideAngularModule, Plus, School } from 'lucide-angular';
 import { ClassService } from '../../services/class.service';
 import { SchoolClass } from '../../../../core/models/school-admin.models';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { AlertService } from '../../../../shared/services/alert.service';
+import { ZbModal } from '../../../../shared/components/ui/zb-modal';
+import { ZbInput } from '../../../../shared/components/ui/zb-input';
+import { ZbButton } from '../../../../shared/components/ui/zb-button';
+import { ZbDatatable, DataTableColumn, DataTableAction } from '../../../../shared/components/ui/zb-datatable';
 
 @Component({
     selector: 'app-class-list',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ReactiveFormsModule, LucideAngularModule],
+    imports: [ReactiveFormsModule, LucideAngularModule, ZbModal, ZbInput, ZbButton, ZbDatatable],
     template: `
     <div class="p-6 lg:p-8">
       <!-- Page Header -->
@@ -17,258 +23,151 @@ import { SchoolClass } from '../../../../core/models/school-admin.models';
           <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Classes</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage school classes and their assignments</p>
         </div>
-        <button
-          (click)="showCreateForm()"
-          class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-          aria-label="Add new class">
-          <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
+        <zb-button [iconLeft]="PlusIcon" (clicked)="openAddModal()" aria-label="Add new class">
           Add Class
-        </button>
+        </zb-button>
       </div>
 
-      <!-- Error Alert -->
-      @if (error()) {
-        <div class="mb-4 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300" role="alert">
-          {{ error() }}
-        </div>
-      }
-
-      <!-- Success Alert -->
-      @if (successMessage()) {
-        <div class="mb-4 p-4 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-300" role="status">
-          {{ successMessage() }}
-        </div>
-      }
-
-      <!-- Inline Form -->
-      @if (showForm()) {
-        <div class="mb-6 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-              {{ editingId() ? 'Edit Class' : 'New Class' }}
-            </h2>
-            <button
-              (click)="cancelForm()"
-              class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              aria-label="Close form">
-              <lucide-icon [img]="XIcon" [size]="18"></lucide-icon>
-            </button>
-          </div>
-
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <!-- Name -->
-              <div>
-                <label for="class-name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Class Name <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="class-name"
-                  type="text"
-                  formControlName="name"
-                  placeholder="e.g. Form 1A"
-                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                  [class.border-red-500]="form.get('name')?.invalid && form.get('name')?.touched">
-                @if (form.get('name')?.invalid && form.get('name')?.touched) {
-                  <p class="mt-1 text-xs text-red-600 dark:text-red-400">Class name is required</p>
-                }
-              </div>
-
-              <!-- Grade Level -->
-              <div>
-                <label for="class-grade" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Grade Level <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="class-grade"
-                  type="text"
-                  formControlName="grade_level"
-                  placeholder="e.g. Form 1"
-                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                  [class.border-red-500]="form.get('grade_level')?.invalid && form.get('grade_level')?.touched">
-                @if (form.get('grade_level')?.invalid && form.get('grade_level')?.touched) {
-                  <p class="mt-1 text-xs text-red-600 dark:text-red-400">Grade level is required</p>
-                }
-              </div>
-
-              <!-- Stream -->
-              <div>
-                <label for="class-stream" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Stream
-                </label>
-                <input
-                  id="class-stream"
-                  type="text"
-                  formControlName="stream"
-                  placeholder="e.g. Science, Arts"
-                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm">
-              </div>
-
-              <!-- Capacity -->
-              <div>
-                <label for="class-capacity" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Capacity <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="class-capacity"
-                  type="number"
-                  formControlName="capacity"
-                  min="1"
-                  placeholder="e.g. 40"
-                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                  [class.border-red-500]="form.get('capacity')?.invalid && form.get('capacity')?.touched">
-                @if (form.get('capacity')?.invalid && form.get('capacity')?.touched) {
-                  <p class="mt-1 text-xs text-red-600 dark:text-red-400">Capacity is required and must be positive</p>
-                }
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3 pt-2">
-              <button
-                type="submit"
-                [disabled]="form.invalid || submitting()"
-                class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium">
-                @if (submitting()) {
-                  <span class="flex items-center gap-2">
-                    <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    Saving...
-                  </span>
-                } @else {
-                  {{ editingId() ? 'Update Class' : 'Create Class' }}
-                }
-              </button>
-              <button
-                type="button"
-                (click)="cancelForm()"
-                class="px-4 py-2 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      }
-
-      <!-- Loading -->
+      <!-- Skeleton Loader -->
       @if (loading()) {
-        <div class="flex items-center justify-center py-12" role="status" aria-label="Loading classes">
-          <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      } @else {
-        @if (classes().length === 0) {
-          <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-12 text-center">
-            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <lucide-icon [img]="SchoolIcon" [size]="28" class="text-slate-400"></lucide-icon>
-            </div>
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-1">No classes yet</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Create your first class to get started.</p>
+        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 p-4"
+             aria-label="Loading classes" role="status">
+          <!-- Search bar skeleton -->
+          <div class="mb-4 h-10 bg-slate-200 dark:bg-slate-700 rounded-sm animate-pulse"></div>
+          <!-- Header row skeleton -->
+          <div class="flex gap-4 px-6 py-3 border-b border-slate-200 dark:border-slate-800">
+            @for (w of skeletonCols; track w) {
+              <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" [style.width]="w"></div>
+            }
           </div>
-        } @else {
-          <!-- Grouped by grade level -->
-          @for (group of groupedClasses(); track group.gradeLevel) {
-            <div class="mb-8">
-              <h2 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 px-1">
-                {{ group.gradeLevel }}
-              </h2>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                @for (cls of group.classes; track cls.id) {
-                  <div
-                    class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow transition-all cursor-pointer group"
-                    (click)="viewClass(cls)"
-                    role="button"
-                    tabindex="0"
-                    (keydown.enter)="viewClass(cls)"
-                    (keydown.space)="viewClass(cls)"
-                    [attr.aria-label]="'View details for ' + cls.name">
-                    <!-- Card Header -->
-                    <div class="flex items-start justify-between mb-3">
-                      <div class="w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
-                        <lucide-icon [img]="SchoolIcon" [size]="20" class="text-primary-600 dark:text-primary-400"></lucide-icon>
-                      </div>
-                      <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          (click)="$event.stopPropagation(); editClass(cls)"
-                          class="p-1.5 text-slate-400 hover:text-primary-600 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-                          [attr.aria-label]="'Edit ' + cls.name">
-                          <lucide-icon [img]="EditIcon" [size]="14"></lucide-icon>
-                        </button>
-                        <button
-                          (click)="$event.stopPropagation(); deleteClass(cls)"
-                          class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                          [attr.aria-label]="'Delete ' + cls.name">
-                          <lucide-icon [img]="TrashIcon" [size]="14"></lucide-icon>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Class Name & Stream -->
-                    <div class="mb-3">
-                      <h3 class="font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ cls.name }}</h3>
-                      @if (cls.stream) {
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ cls.stream }}</p>
-                      }
-                    </div>
-
-                    <!-- Stats -->
-                    <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                      <span class="flex items-center gap-1">
-                        <lucide-icon [img]="UsersIcon" [size]="12"></lucide-icon>
-                        {{ cls.students_count ?? 0 }}/{{ cls.capacity }}
-                      </span>
-                    </div>
-
-                    @if (cls.classTeacher) {
-                      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
-                        Teacher: <span class="text-slate-700 dark:text-slate-300 font-medium">{{ cls.classTeacher.name }}</span>
-                      </div>
-                    }
-
-                    <!-- View arrow -->
-                    <div class="mt-3 flex items-center justify-end text-xs text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                      View details
-                      <lucide-icon [img]="ChevronRightIcon" [size]="14" class="ml-1"></lucide-icon>
-                    </div>
-                  </div>
-                }
-              </div>
+          <!-- Data rows skeleton -->
+          @for (row of skeletonRows; track row) {
+            <div class="flex gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+              @for (w of skeletonCols; track w) {
+                <div class="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" [style.width]="w"></div>
+              }
             </div>
           }
-        }
+        </div>
+      } @else {
+        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+          <zb-datatable
+            [data]="classes()"
+            [columns]="columns"
+            [actions]="tableActions"
+            trackBy="id" />
+        </div>
       }
     </div>
+
+    <!-- Add / Edit Modal -->
+    @if (showModal()) {
+      <zb-modal
+        [title]="editingId() ? 'Edit Class' : 'New Class'"
+        [icon]="SchoolIcon"
+        size="md"
+        (close)="closeModal()">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-6 py-5 space-y-4">
+          @if (formError()) {
+            <div class="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-sm text-sm text-red-700 dark:text-red-300" role="alert">
+              {{ formError() }}
+            </div>
+          }
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <zb-input
+              formControlName="name"
+              label="Class Name"
+              placeholder="e.g. Form 1A"
+              [required]="true"
+              [error]="getFieldError('name', 'Class name is required')" />
+
+            <zb-input
+              formControlName="grade_level"
+              label="Grade Level"
+              placeholder="e.g. Form 1"
+              [required]="true"
+              [error]="getFieldError('grade_level', 'Grade level is required')" />
+
+            <zb-input
+              formControlName="stream"
+              label="Stream"
+              placeholder="e.g. Science, Arts" />
+
+            <zb-input
+              formControlName="capacity"
+              type="number"
+              label="Capacity"
+              placeholder="e.g. 40"
+              [required]="true"
+              [error]="getFieldError('capacity', 'Capacity must be at least 1')" />
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <zb-button variant="outline" type="button" (clicked)="closeModal()">Cancel</zb-button>
+            <zb-button
+              variant="primary"
+              type="submit"
+              [loading]="submitting()"
+              [disabled]="form.invalid">
+              {{ editingId() ? 'Update Class' : 'Create Class' }}
+            </zb-button>
+          </div>
+        </form>
+      </zb-modal>
+    }
   `,
 })
 export class ClassList implements OnInit {
     private readonly classService = inject(ClassService);
     private readonly router = inject(Router);
     private readonly fb = inject(FormBuilder);
+    private readonly toast = inject(ToastService);
+    private readonly alertService = inject(AlertService);
 
-    // Icons
     readonly PlusIcon = Plus;
-    readonly EditIcon = Edit;
-    readonly TrashIcon = Trash2;
-    readonly XIcon = X;
     readonly SchoolIcon = School;
-    readonly UsersIcon = Users;
-    readonly ChevronRightIcon = ChevronRight;
 
-    // State
+    // Skeleton layout — column widths mirror the datatable columns
+    readonly skeletonCols = ['25%', '15%', '12%', '12%', '18%', '10%'];
+    readonly skeletonRows = [1, 2, 3, 4, 5, 6];
+
     readonly classes = signal<SchoolClass[]>([]);
     readonly loading = signal(false);
     readonly submitting = signal(false);
-    readonly showForm = signal(false);
+    readonly showModal = signal(false);
     readonly editingId = signal<number | null>(null);
-    readonly error = signal<string | null>(null);
-    readonly successMessage = signal<string | null>(null);
+    readonly formError = signal<string | null>(null);
 
-    readonly groupedClasses = computed(() => {
-        const map = new Map<string, SchoolClass[]>();
-        for (const cls of this.classes()) {
-            const existing = map.get(cls.grade_level) ?? [];
-            existing.push(cls);
-            map.set(cls.grade_level, existing);
-        }
-        return Array.from(map.entries()).map(([gradeLevel, classes]) => ({ gradeLevel, classes }));
-    });
+    readonly columns: DataTableColumn<SchoolClass>[] = [
+        { key: 'name', label: 'Name', sortable: true, filterable: true },
+        { key: 'grade_level', label: 'Grade', sortable: true },
+        { key: 'stream', label: 'Stream', formatter: v => (v as string) || '—' },
+        {
+            key: 'capacity',
+            label: 'Enrolment',
+            formatter: (_v, item) => {
+                const cls = item as SchoolClass;
+                return `${cls.students_count ?? 0} / ${cls.capacity}`;
+            },
+        },
+        {
+            key: 'class_teacher',
+            label: 'Class Teacher',
+            formatter: v => (v as { name?: string } | undefined)?.name ?? '—',
+        },
+        {
+            key: 'academic_year_id',
+            label: 'Year',
+            formatter: (_v, item) => (item as SchoolClass & { academic_year?: { name: string } }).academic_year?.name ?? '—',
+        },
+    ];
+
+    readonly tableActions: DataTableAction<SchoolClass>[] = [
+        { label: 'View', variant: 'outline', size: 'sm', callback: cls => this.viewClass(cls) },
+        { label: 'Edit', variant: 'outline', size: 'sm', callback: cls => this.editClass(cls) },
+        { label: 'Delete', variant: 'danger', size: 'sm', callback: cls => this.deleteClass(cls) },
+    ];
 
     readonly form = this.fb.group({
         name: ['', [Validators.required, Validators.maxLength(255)]],
@@ -285,24 +184,23 @@ export class ClassList implements OnInit {
 
     loadClasses(): void {
         this.loading.set(true);
-        this.error.set(null);
         this.classService.getClasses({ per_page: 100 }).subscribe({
             next: (res) => {
-                this.classes.set(res.data);
+                this.classes.set(res.data.data);
                 this.loading.set(false);
             },
             error: (err) => {
-                this.error.set(err?.error?.message ?? 'Failed to load classes. Please try again.');
+                this.toast.error('Error', err?.error?.message ?? 'Failed to load classes.');
                 this.loading.set(false);
             },
         });
     }
 
-    showCreateForm(): void {
+    openAddModal(): void {
         this.editingId.set(null);
         this.form.reset({ name: '', grade_level: '', stream: '', capacity: 30, class_teacher_id: null, academic_year_id: null });
-        this.showForm.set(true);
-        this.error.set(null);
+        this.formError.set(null);
+        this.showModal.set(true);
     }
 
     editClass(cls: SchoolClass): void {
@@ -315,14 +213,15 @@ export class ClassList implements OnInit {
             class_teacher_id: cls.class_teacher_id,
             academic_year_id: cls.academic_year_id,
         });
-        this.showForm.set(true);
-        this.error.set(null);
+        this.formError.set(null);
+        this.showModal.set(true);
     }
 
-    cancelForm(): void {
-        this.showForm.set(false);
+    closeModal(): void {
+        this.showModal.set(false);
         this.editingId.set(null);
         this.form.reset();
+        this.formError.set(null);
     }
 
     onSubmit(): void {
@@ -332,7 +231,7 @@ export class ClassList implements OnInit {
         }
 
         this.submitting.set(true);
-        this.error.set(null);
+        this.formError.set(null);
 
         const data = this.form.value;
         const id = this.editingId();
@@ -344,15 +243,12 @@ export class ClassList implements OnInit {
         request.subscribe({
             next: () => {
                 this.submitting.set(false);
-                this.showForm.set(false);
-                this.editingId.set(null);
-                this.form.reset();
-                this.successMessage.set(id ? 'Class updated successfully.' : 'Class created successfully.');
+                this.closeModal();
+                this.toast.success(id ? 'Class updated successfully.' : 'Class created successfully.');
                 this.loadClasses();
-                setTimeout(() => this.successMessage.set(null), 4000);
             },
             error: (err) => {
-                this.error.set(err?.error?.message ?? 'Failed to save class. Please try again.');
+                this.formError.set(err?.error?.message ?? 'Failed to save class. Please try again.');
                 this.submitting.set(false);
             },
         });
@@ -362,17 +258,28 @@ export class ClassList implements OnInit {
         this.router.navigate(['/tenant/classes', cls.id]);
     }
 
-    deleteClass(cls: SchoolClass): void {
-        if (!confirm(`Are you sure you want to delete "${cls.name}"?`)) return;
+    async deleteClass(cls: SchoolClass): Promise<void> {
+        const confirmed = await this.alertService.confirm({
+            title: 'Delete Class',
+            message: `Are you sure you want to delete "${cls.name}"? This cannot be undone.`,
+            confirmText: 'Delete',
+            type: 'danger',
+        });
+        if (!confirmed) return;
+
         this.classService.deleteClass(cls.id).subscribe({
             next: () => {
-                this.successMessage.set('Class deleted successfully.');
+                this.toast.success('Class deleted successfully.');
                 this.loadClasses();
-                setTimeout(() => this.successMessage.set(null), 4000);
             },
             error: (err) => {
-                this.error.set(err?.error?.message ?? 'Failed to delete class.');
+                this.toast.error('Error', err?.error?.message ?? 'Failed to delete class.');
             },
         });
+    }
+
+    getFieldError(field: string, message: string): string {
+        const ctrl = this.form.get(field);
+        return ctrl?.invalid && ctrl.touched ? message : '';
     }
 }

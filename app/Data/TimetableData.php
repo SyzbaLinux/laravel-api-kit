@@ -19,8 +19,7 @@ final class TimetableData extends Data
         public readonly int $school_class_id,
         #[Required, IntegerType]
         public readonly int $subject_id,
-        #[Required, IntegerType]
-        public readonly int $teacher_id,
+        public readonly int|null|Optional $teacher_id,
         #[Required, IntegerType]
         public readonly int $academic_term_id,
         #[Required, IntegerType, Between(1, 7)]

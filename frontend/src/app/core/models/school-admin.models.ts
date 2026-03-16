@@ -64,9 +64,10 @@ export interface SchoolClass {
     class_teacher_id: number | null;
     school_id: number;
     academic_year_id: number | null;
-    classTeacher?: User;
-    academicYear?: AcademicYear;
+    class_teacher?: User;
+    academic_year?: AcademicYear;
     subjects?: Subject[];
+    students?: User[];
     students_count?: number;
     created_at: string;
     updated_at: string;

@@ -8,6 +8,7 @@ use App\Data\SchoolClassData;
 use App\Http\Controllers\Api\ApiController;
 use App\Models\SchoolClass;
 use App\Models\Subject;
+use App\Models\User;
 use App\Services\SchoolClassService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,5 +89,48 @@ final class SchoolClassController extends ApiController
         $this->schoolClassService->removeSubject($schoolClass, $subject->id);
 
         return $this->success(message: 'Subject removed from class successfully');
+    }
+
+    public function enrollStudent(Request $request, SchoolClass $schoolClass): JsonResponse
+    {
+        $this->authorize('update', $schoolClass);
+
+        $request->validate([
+            'student_id' => ['required', 'integer', 'exists:users,id'],
+            'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
+        ]);
+
+        $this->schoolClassService->enrollStudent(
+            $schoolClass,
+            (int) $request->input('student_id'),
+            $request->input('academic_year_id') ? (int) $request->input('academic_year_id') : null
+        );
+
+        return $this->success(message: 'Student enrolled successfully');
+    }
+
+    public function unenrollStudent(Request $request, SchoolClass $schoolClass, User $user): JsonResponse
+    {
+        $this->authorize('update', $schoolClass);
+
+        $this->schoolClassService->unenrollStudent($schoolClass, $user->id);
+
+        return $this->success(message: 'Student unenrolled successfully');
+    }
+
+    public function assignTeacher(Request $request, SchoolClass $schoolClass): JsonResponse
+    {
+        $this->authorize('update', $schoolClass);
+
+        $request->validate([
+            'teacher_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        $schoolClass = $this->schoolClassService->assignClassTeacher(
+            $schoolClass,
+            (int) $request->input('teacher_id')
+        );
+
+        return $this->success($schoolClass, 'Class teacher assigned successfully');
     }
 }

@@ -39,6 +39,7 @@ export interface School {
     status: SchoolStatus;
     subscription_plan_id?: number;
     subscriptionPlanId?: number;
+    subscription_plan?: SubscriptionPlan;
     subscriptionPlan?: SubscriptionPlan;
     country?: Location;
     state?: Location;

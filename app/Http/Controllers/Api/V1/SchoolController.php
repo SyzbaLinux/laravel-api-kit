@@ -8,12 +8,15 @@ use App\Data\SchoolData;
 use App\Http\Controllers\Api\ApiController;
 use App\Models\School;
 use App\Services\SchoolService;
+use App\Services\UsageTrackingService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 final class SchoolController extends ApiController
 {
     public function __construct(
         private readonly SchoolService $schoolService,
+        private readonly UsageTrackingService $usageTrackingService,
     ) {}
 
     public function index(): JsonResponse
@@ -61,6 +64,15 @@ final class SchoolController extends ApiController
         return $this->success(message: 'School deleted successfully');
     }
 
+    public function usage(School $school): JsonResponse
+    {
+        $this->authorize('viewAny', School::class);
+
+        $usage = $this->usageTrackingService->getUsage($school);
+
+        return $this->success($usage, 'School usage retrieved successfully');
+    }
+
     public function searchPublic(): JsonResponse
     {
         $search = (string) request()->input('search', '');
@@ -76,5 +88,18 @@ final class SchoolController extends ApiController
         $school = $this->schoolService->toggleStatus($school);
 
         return $this->success($school, 'School status toggled successfully');
+    }
+
+    public function assignPlan(Request $request, School $school): JsonResponse
+    {
+        $this->authorize('update', $school);
+
+        $request->validate([
+            'subscription_plan_id' => ['nullable', 'integer', 'exists:subscription_plans,id'],
+        ]);
+
+        $school = $this->schoolService->assignPlan($school, $request->input('subscription_plan_id'));
+
+        return $this->success($school, 'Subscription plan assigned successfully');
     }
 }

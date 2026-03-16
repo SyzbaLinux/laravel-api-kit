@@ -117,6 +117,13 @@ final class SchoolService
         return (bool) $school->delete();
     }
 
+    public function assignPlan(School $school, ?int $planId): School
+    {
+        $school->update(['subscription_plan_id' => $planId]);
+
+        return $school->fresh(['subscriptionPlan', 'country', 'state', 'city']);
+    }
+
     public function toggleStatus(School $school): School
     {
         $newStatus = $school->status === SchoolStatus::ACTIVE

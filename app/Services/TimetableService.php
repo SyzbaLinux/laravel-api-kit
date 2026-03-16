@@ -13,10 +13,11 @@ final class TimetableService
     /**
      * @return Collection<int, Timetable>
      */
-    public function list(int $classId): Collection
+    public function list(int $classId, ?int $termId = null): Collection
     {
         return Timetable::query()
             ->where('school_class_id', $classId)
+            ->when($termId, fn ($q) => $q->where('academic_term_id', $termId))
             ->with(['subject', 'teacher', 'academicTerm'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')

@@ -81,4 +81,14 @@ final class SchoolClass extends Model
         return $this->belongsToMany(Subject::class, 'class_subject', 'school_class_id', 'subject_id')
             ->withPivot('teacher_id');
     }
+
+    /**
+     * @return BelongsToMany<User, $this>
+     */
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'class_enrollments', 'school_class_id', 'student_id')
+            ->withPivot(['academic_year_id', 'enrolled_at'])
+            ->withTimestamps();
+    }
 }

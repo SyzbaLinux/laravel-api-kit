@@ -6,6 +6,38 @@ export const TENANT_ROUTES: Routes = [
         loadComponent: () => import('./pages/dashboard/tenant-dashboard').then(m => m.TenantDashboard),
     },
     {
+        path: 'teachers',
+        loadComponent: () => import('./pages/teachers/teacher-list').then(m => m.TeacherList),
+    },
+    {
+        path: 'teachers/import',
+        loadComponent: () => import('./pages/teachers/teacher-import').then(m => m.TeacherImport),
+    },
+    {
+        path: 'teachers/:id',
+        loadComponent: () => import('./pages/teachers/teacher-detail').then(m => m.TeacherDetail),
+    },
+    {
+        path: 'students',
+        loadComponent: () => import('./pages/students/student-list').then(m => m.StudentList),
+    },
+    {
+        path: 'students/import',
+        loadComponent: () => import('./pages/students/student-import').then(m => m.StudentImport),
+    },
+    {
+        path: 'students/:id',
+        loadComponent: () => import('./pages/students/student-detail').then(m => m.StudentDetail),
+    },
+    {
+        path: 'guardians',
+        loadComponent: () => import('./pages/guardians/guardian-list').then(m => m.GuardianList),
+    },
+    {
+        path: 'guardians/:id',
+        loadComponent: () => import('./pages/guardians/guardian-detail').then(m => m.GuardianDetail),
+    },
+    {
         path: 'departments',
         loadComponent: () => import('./pages/departments/department-list').then(m => m.DepartmentList),
     },
@@ -27,7 +59,15 @@ export const TENANT_ROUTES: Routes = [
     },
     {
         path: 'timetable',
+        loadComponent: () => import('./pages/timetable/timetable-selector').then(m => m.TimetableSelector),
+    },
+    {
+        path: 'timetable/:classId/:termId',
         loadComponent: () => import('./pages/timetable/timetable-view').then(m => m.TimetableView),
+    },
+    {
+        path: 'profile',
+        loadComponent: () => import('./pages/profile/profile-page').then(m => m.ProfilePage),
     },
     {
         path: '',

@@ -16,8 +16,7 @@ final class AcademicTermData extends Data
         public readonly int|Optional $id,
         #[Required, StringType, Max(100)]
         public readonly string $name,
-        #[Required]
-        public readonly int $academic_year_id,
+        public readonly int|Optional $academic_year_id,
         #[Required, StringType]
         public readonly string $start_date,
         #[Required, StringType]

@@ -69,7 +69,7 @@ final class AuthController extends ApiController
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
-        $user->load('role');
+        $user->load(['role', 'school']);
 
         return $this->success(new UserResource($user));
     }

@@ -1,18 +1,26 @@
 import { Component, ChangeDetectionStrategy, OnInit, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { LucideAngularModule, ArrowLeft, School, Users, BookMarked, Plus, Trash2, User } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, School, Users, BookMarked, UserCheck } from 'lucide-angular';
 import { ClassService } from '../../services/class.service';
 import { SubjectService } from '../../services/subject.service';
-import { SchoolClass, Subject } from '../../../../core/models/school-admin.models';
+import { DepartmentService } from '../../services/department.service';
+import { StudentService } from '../../services/student.service';
+import { SchoolClass, Subject, User as UserModel } from '../../../../core/models/school-admin.models';
+import { Student } from '../../models/user-management.models';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { AlertService } from '../../../../shared/services/alert.service';
+import { ZbButton } from '../../../../shared/components/ui/zb-button';
+import { ZbModal } from '../../../../shared/components/ui/zb-modal';
+import { ZbCombobox, ComboboxOption } from '../../../../shared/components/ui/zb-combobox';
 
 @Component({
     selector: 'app-class-detail',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ReactiveFormsModule, LucideAngularModule, RouterLink],
+    imports: [ReactiveFormsModule, LucideAngularModule, RouterLink, ZbButton, ZbModal, ZbCombobox],
     template: `
     <div class="p-6 lg:p-8">
-      <!-- Back Button -->
+      <!-- Back -->
       <a
         routerLink="/tenant/classes"
         class="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 mb-6 transition-colors">
@@ -20,80 +28,60 @@ import { SchoolClass, Subject } from '../../../../core/models/school-admin.model
         Back to Classes
       </a>
 
-      <!-- Error Alert -->
-      @if (error()) {
-        <div class="mb-4 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300" role="alert">
-          {{ error() }}
-        </div>
-      }
-
-      <!-- Success Alert -->
-      @if (successMessage()) {
-        <div class="mb-4 p-4 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-300" role="status">
-          {{ successMessage() }}
-        </div>
-      }
-
       @if (loading()) {
         <div class="flex items-center justify-center py-12" role="status" aria-label="Loading class details">
           <div class="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       } @else if (schoolClass()) {
+
         <!-- Page Header -->
-        <div class="flex items-start justify-between mb-6">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
-              <lucide-icon [img]="SchoolIcon" [size]="28" class="text-primary-600 dark:text-primary-400"></lucide-icon>
-            </div>
-            <div>
-              <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ schoolClass()!.name }}</h1>
-              <div class="flex items-center gap-3 mt-1">
-                <span class="text-sm text-slate-500 dark:text-slate-400">{{ schoolClass()!.grade_level }}</span>
-                @if (schoolClass()!.stream) {
-                  <span class="text-slate-300 dark:text-slate-600">•</span>
-                  <span class="text-sm text-slate-500 dark:text-slate-400">{{ schoolClass()!.stream }}</span>
-                }
-              </div>
+        <div class="flex items-start gap-4 mb-6">
+          <div class="w-14 h-14 rounded-sm bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
+            <lucide-icon [img]="SchoolIcon" [size]="28" class="text-primary-600 dark:text-primary-400"></lucide-icon>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ schoolClass()!.name }}</h1>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-sm text-slate-500 dark:text-slate-400">{{ schoolClass()!.grade_level }}</span>
+              @if (schoolClass()!.stream) {
+                <span class="text-slate-300 dark:text-slate-600">•</span>
+                <span class="text-sm text-slate-500 dark:text-slate-400">{{ schoolClass()!.stream }}</span>
+              }
             </div>
           </div>
         </div>
 
-        <!-- Stats Row -->
+        <!-- Stats -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <!-- Capacity -->
-          <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+          <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 p-5">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-sm bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                 <lucide-icon [img]="UsersIcon" [size]="20" class="text-blue-600 dark:text-blue-400"></lucide-icon>
               </div>
               <div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Students / Capacity</p>
                 <p class="text-lg font-bold text-slate-900 dark:text-white">
-                  {{ schoolClass()!.students_count ?? 0 }} / {{ schoolClass()!.capacity }}
+                  {{ enrolledStudents().length }} / {{ schoolClass()!.capacity }}
                 </p>
               </div>
             </div>
           </div>
-
-          <!-- Class Teacher -->
-          <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+          <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 p-5">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-accent-50 dark:bg-accent-900/20 flex items-center justify-center">
-                <lucide-icon [img]="UserIcon" [size]="20" class="text-accent-600 dark:text-accent-400"></lucide-icon>
+              <div class="w-10 h-10 rounded-sm bg-accent-50 dark:bg-accent-900/20 flex items-center justify-center">
+                <lucide-icon [img]="UserCheckIcon" [size]="20" class="text-accent-600 dark:text-accent-400"></lucide-icon>
               </div>
               <div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Class Teacher</p>
                 <p class="text-sm font-semibold text-slate-900 dark:text-white">
-                  {{ schoolClass()!.classTeacher?.name ?? 'Not assigned' }}
+                  {{ schoolClass()!.class_teacher?.name ?? 'Not assigned' }}
                 </p>
               </div>
             </div>
           </div>
-
-          <!-- Subjects Count -->
-          <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+          <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 p-5">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-sm bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
                 <lucide-icon [img]="BookMarkedIcon" [size]="20" class="text-purple-600 dark:text-purple-400"></lucide-icon>
               </div>
               <div>
@@ -106,60 +94,86 @@ import { SchoolClass, Subject } from '../../../../core/models/school-admin.model
           </div>
         </div>
 
-        <!-- Subjects Section -->
-        <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
+        <!-- Assign Class Teacher -->
+        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
           <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Assigned Subjects</h2>
-            <button
-              (click)="toggleAddSubject()"
-              class="flex items-center gap-2 px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
-              <lucide-icon [img]="PlusIcon" [size]="14"></lucide-icon>
-              Add Subject
-            </button>
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Class Teacher</h2>
+            <zb-button variant="secondary" size="sm" [iconLeft]="UserCheckIcon" (clicked)="openAssignTeacherModal()">
+              Assign Teacher
+            </zb-button>
+          </div>
+          <div class="px-6 py-4">
+            @if (schoolClass()!.class_teacher) {
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-primary-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                  {{ schoolClass()!.class_teacher!.name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ schoolClass()!.class_teacher!.name }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Class Teacher</p>
+                </div>
+              </div>
+            } @else {
+              <p class="text-sm text-slate-500 dark:text-slate-400">No class teacher assigned</p>
+            }
+          </div>
+        </div>
+
+        <!-- Enrolled Students -->
+        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+              Enrolled Students
+              <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                {{ enrolledStudents().length }}
+              </span>
+            </h2>
+            <zb-button
+              variant="primary"
+              size="sm"
+              [disabled]="studentOptions().length === 0"
+              (clicked)="openEnrollModal()">
+              Enroll Student
+            </zb-button>
           </div>
 
-          <!-- Add Subject Form -->
-          @if (showAddSubject()) {
-            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-              <form [formGroup]="addSubjectForm" (ngSubmit)="onAddSubject()" class="flex items-end gap-3 flex-wrap">
-                <div class="flex-1 min-w-48">
-                  <label for="assign-subject" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subject</label>
-                  <select
-                    id="assign-subject"
-                    formControlName="subject_id"
-                    class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm">
-                    <option [ngValue]="null">Select a subject...</option>
-                    @for (subject of availableSubjects(); track subject.id) {
-                      <option [ngValue]="subject.id">{{ subject.name }}</option>
-                    }
-                  </select>
+          @if (enrolledStudents().length === 0) {
+            <div class="px-6 py-10 text-center">
+              <lucide-icon [img]="UsersIcon" [size]="24" class="text-slate-300 dark:text-slate-600 mx-auto mb-2"></lucide-icon>
+              <p class="text-sm text-slate-500 dark:text-slate-400">No students enrolled yet</p>
+            </div>
+          } @else {
+            <div class="divide-y divide-slate-100 dark:divide-slate-800">
+              @for (student of enrolledStudents(); track student.id) {
+                <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                      {{ student.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-slate-900 dark:text-white">{{ student.name }}</p>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">{{ student.email }}</p>
+                    </div>
+                  </div>
+                  <zb-button variant="danger" size="sm" (clicked)="unenrollStudent(student)"
+                    [attr.aria-label]="'Unenroll ' + student.name">
+                    Unenroll
+                  </zb-button>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    [disabled]="addSubjectForm.invalid || addingSubject()"
-                    class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 text-sm font-medium transition-colors">
-                    @if (addingSubject()) {
-                      <span class="flex items-center gap-2">
-                        <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                        Adding...
-                      </span>
-                    } @else {
-                      Assign
-                    }
-                  </button>
-                  <button
-                    type="button"
-                    (click)="toggleAddSubject()"
-                    class="px-4 py-2 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium transition-colors">
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              }
             </div>
           }
+        </div>
 
-          <!-- Subject List -->
+        <!-- Assigned Subjects -->
+        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Assigned Subjects</h2>
+            <zb-button variant="primary" size="sm" (clicked)="openAddSubjectModal()">
+              Add Subject
+            </zb-button>
+          </div>
+
           @if (!schoolClass()!.subjects || schoolClass()!.subjects!.length === 0) {
             <div class="px-6 py-12 text-center">
               <lucide-icon [img]="BookMarkedIcon" [size]="24" class="text-slate-300 dark:text-slate-600 mx-auto mb-2"></lucide-icon>
@@ -170,7 +184,7 @@ import { SchoolClass, Subject } from '../../../../core/models/school-admin.model
               @for (subject of schoolClass()!.subjects!; track subject.id) {
                 <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center flex-shrink-0">
+                    <div class="w-8 h-8 rounded-sm bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0">
                       <lucide-icon [img]="BookMarkedIcon" [size]="16" class="text-purple-600 dark:text-purple-400"></lucide-icon>
                     </div>
                     <div>
@@ -178,57 +192,159 @@ import { SchoolClass, Subject } from '../../../../core/models/school-admin.model
                       <p class="text-xs text-slate-500 dark:text-slate-400">{{ subject.code }}</p>
                     </div>
                   </div>
-                  <button
-                    (click)="removeSubject(subject)"
-                    class="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  <zb-button variant="danger" size="sm" (clicked)="removeSubject(subject)"
                     [attr.aria-label]="'Remove ' + subject.name + ' from class'">
-                    <lucide-icon [img]="TrashIcon" [size]="16"></lucide-icon>
-                  </button>
+                    Remove
+                  </zb-button>
                 </div>
               }
             </div>
           }
         </div>
+
       } @else {
         <div class="text-center py-12">
           <p class="text-slate-500 dark:text-slate-400">Class not found.</p>
         </div>
+      }
+
+      <!-- Assign Teacher Modal -->
+      @if (showAssignTeacherModal()) {
+        <zb-modal title="Assign Class Teacher" [icon]="UserCheckIcon" size="md" (close)="closeAssignTeacherModal()">
+          <div class="px-6 py-5">
+            <form [formGroup]="assignTeacherForm" (ngSubmit)="onAssignTeacher()">
+              <zb-combobox
+                formControlName="teacher_id"
+                label="Search teachers"
+                placeholder="Type a name or email..."
+                [options]="teacherOptions()"
+                [required]="true" />
+              <div class="flex items-center justify-end gap-2 mt-6">
+                <zb-button variant="outline" type="button" (clicked)="closeAssignTeacherModal()">Cancel</zb-button>
+                <zb-button variant="primary" type="submit" [loading]="assigningTeacher()" [disabled]="assignTeacherForm.invalid">
+                  Assign
+                </zb-button>
+              </div>
+            </form>
+          </div>
+        </zb-modal>
+      }
+
+      <!-- Add Subject Modal -->
+      @if (showAddSubjectModal()) {
+        <zb-modal title="Add Subject" [icon]="BookMarkedIcon" size="md" (close)="closeAddSubjectModal()">
+          <div class="px-6 py-5">
+            <form [formGroup]="addSubjectForm" (ngSubmit)="onAddSubject()">
+              <zb-combobox
+                formControlName="subject_id"
+                label="Search subjects"
+                placeholder="Type a subject name or code..."
+                [options]="subjectOptions()"
+                [required]="true" />
+              <div class="flex items-center justify-end gap-2 mt-6">
+                <zb-button variant="outline" type="button" (clicked)="closeAddSubjectModal()">Cancel</zb-button>
+                <zb-button variant="primary" type="submit" [loading]="addingSubject()" [disabled]="addSubjectForm.invalid">
+                  Assign
+                </zb-button>
+              </div>
+            </form>
+          </div>
+        </zb-modal>
+      }
+
+      <!-- Enroll Student Modal -->
+      @if (showEnrollModal()) {
+        <zb-modal title="Enroll Student" [icon]="UsersIcon" size="md" (close)="closeEnrollModal()">
+          <div class="px-6 py-5">
+            @if (loadingStudents()) {
+              <div class="flex items-center justify-center py-8">
+                <div class="w-6 h-6 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            } @else {
+              <form [formGroup]="enrollForm" (ngSubmit)="onEnrollStudent()">
+                <zb-combobox
+                  formControlName="student_id"
+                  label="Search students"
+                  placeholder="Type a name or student number..."
+                  [options]="studentOptions()"
+                  [required]="true" />
+                <div class="flex items-center justify-end gap-2 mt-6">
+                  <zb-button variant="outline" type="button" (clicked)="closeEnrollModal()">Cancel</zb-button>
+                  <zb-button variant="primary" type="submit" [loading]="enrolling()" [disabled]="enrollForm.invalid">
+                    Enroll
+                  </zb-button>
+                </div>
+              </form>
+            }
+          </div>
+        </zb-modal>
       }
     </div>
   `,
 })
 export class ClassDetail implements OnInit {
     private readonly route = inject(ActivatedRoute);
-    private readonly router = inject(Router);
     private readonly classService = inject(ClassService);
     private readonly subjectService = inject(SubjectService);
+    private readonly departmentService = inject(DepartmentService);
+    private readonly studentService = inject(StudentService);
     private readonly fb = inject(FormBuilder);
+    private readonly toast = inject(ToastService);
+    private readonly alertService = inject(AlertService);
 
-    // Icons
     readonly ArrowLeftIcon = ArrowLeft;
     readonly SchoolIcon = School;
     readonly UsersIcon = Users;
     readonly BookMarkedIcon = BookMarked;
-    readonly PlusIcon = Plus;
-    readonly TrashIcon = Trash2;
-    readonly UserIcon = User;
+    readonly UserCheckIcon = UserCheck;
 
-    // State
     readonly schoolClass = signal<SchoolClass | null>(null);
     readonly allSubjects = signal<Subject[]>([]);
+    readonly teachers = signal<UserModel[]>([]);
+    readonly allStudents = signal<Student[]>([]);
     readonly loading = signal(false);
+    readonly loadingStudents = signal(false);
     readonly addingSubject = signal(false);
-    readonly showAddSubject = signal(false);
-    readonly error = signal<string | null>(null);
-    readonly successMessage = signal<string | null>(null);
+    readonly showAddSubjectModal = signal(false);
+    readonly showAssignTeacherModal = signal(false);
+    readonly showEnrollModal = signal(false);
+    readonly assigningTeacher = signal(false);
+    readonly enrolling = signal(false);
 
-    readonly availableSubjects = computed(() => {
+    readonly enrolledStudents = computed(() => this.schoolClass()?.students ?? []);
+
+    readonly teacherOptions = computed<ComboboxOption[]>(() =>
+        this.teachers().map(t => ({ value: String(t.id), label: t.name, sublabel: t.email }))
+    );
+
+    readonly subjectOptions = computed<ComboboxOption[]>(() => {
         const assignedIds = new Set((this.schoolClass()?.subjects ?? []).map(s => s.id));
-        return this.allSubjects().filter(s => !assignedIds.has(s.id));
+        return this.allSubjects()
+            .filter(s => !assignedIds.has(s.id))
+            .map(s => ({ value: String(s.id), label: s.name, sublabel: s.code ?? undefined }));
+    });
+
+    readonly studentOptions = computed<ComboboxOption[]>(() => {
+        const enrolledIds = new Set(this.enrolledStudents().map(s => s.id));
+        return this.allStudents()
+            .filter(s => !enrolledIds.has(s.id))
+            .map(s => ({
+                value: String(s.id),
+                label: s.name,
+                sublabel: s.studentProfile?.student_number ?? undefined,
+            }));
     });
 
     readonly addSubjectForm = this.fb.group({
-        subject_id: [null as number | null, Validators.required],
+        subject_id: ['', Validators.required],
+    });
+
+    readonly assignTeacherForm = this.fb.group({
+        teacher_id: ['', Validators.required],
+    });
+
+    readonly enrollForm = this.fb.group({
+        student_id: ['', Validators.required],
     });
 
     ngOnInit(): void {
@@ -236,19 +352,38 @@ export class ClassDetail implements OnInit {
         if (id) {
             this.loadClass(id);
             this.loadAllSubjects();
+            this.loadTeachers();
+            this.loadStudents();
         }
+    }
+
+    loadTeachers(): void {
+        this.departmentService.getTeachers({ per_page: 100 }).subscribe({
+            next: (res) => this.teachers.set(res.data.data),
+            error: () => {},
+        });
+    }
+
+    loadStudents(): void {
+        this.loadingStudents.set(true);
+        this.studentService.getStudents({ per_page: 200 }).subscribe({
+            next: (res) => {
+                this.allStudents.set(res.data.data);
+                this.loadingStudents.set(false);
+            },
+            error: () => this.loadingStudents.set(false),
+        });
     }
 
     loadClass(id: number): void {
         this.loading.set(true);
-        this.error.set(null);
         this.classService.getClass(id).subscribe({
             next: (res) => {
                 this.schoolClass.set(res.data);
                 this.loading.set(false);
             },
             error: (err) => {
-                this.error.set(err?.error?.message ?? 'Failed to load class details.');
+                this.toast.error('Error', err?.error?.message ?? 'Failed to load class details.');
                 this.loading.set(false);
             },
         });
@@ -256,53 +391,147 @@ export class ClassDetail implements OnInit {
 
     loadAllSubjects(): void {
         this.subjectService.getSubjects({ per_page: 200 }).subscribe({
-            next: (res) => this.allSubjects.set(res.data),
+            next: (res) => this.allSubjects.set(res.data.data),
             error: () => {},
         });
     }
 
-    toggleAddSubject(): void {
-        this.showAddSubject.update(v => !v);
-        this.addSubjectForm.reset({ subject_id: null });
+    openAssignTeacherModal(): void {
+        this.assignTeacherForm.reset({ teacher_id: '' });
+        this.showAssignTeacherModal.set(true);
+    }
+
+    closeAssignTeacherModal(): void {
+        this.showAssignTeacherModal.set(false);
+        this.assignTeacherForm.reset({ teacher_id: '' });
+    }
+
+    onAssignTeacher(): void {
+        if (this.assignTeacherForm.invalid) return;
+        const cls = this.schoolClass();
+        if (!cls) return;
+        const teacherId = Number(this.assignTeacherForm.value.teacher_id);
+        if (!teacherId) return;
+
+        this.assigningTeacher.set(true);
+        this.classService.assignTeacher(cls.id, teacherId).subscribe({
+            next: (res) => {
+                this.schoolClass.set(res.data);
+                this.assigningTeacher.set(false);
+                this.closeAssignTeacherModal();
+                this.toast.success('Class teacher assigned successfully.');
+            },
+            error: (err) => {
+                this.toast.error('Error', err?.error?.message ?? 'Failed to assign class teacher.');
+                this.assigningTeacher.set(false);
+            },
+        });
+    }
+
+    openAddSubjectModal(): void {
+        this.addSubjectForm.reset({ subject_id: '' });
+        this.showAddSubjectModal.set(true);
+    }
+
+    closeAddSubjectModal(): void {
+        this.showAddSubjectModal.set(false);
+        this.addSubjectForm.reset({ subject_id: '' });
     }
 
     onAddSubject(): void {
         if (this.addSubjectForm.invalid) return;
         const cls = this.schoolClass();
         if (!cls) return;
-
-        const subjectId = this.addSubjectForm.value.subject_id;
+        const subjectId = Number(this.addSubjectForm.value.subject_id);
         if (!subjectId) return;
 
         this.addingSubject.set(true);
         this.classService.assignSubject(cls.id, subjectId).subscribe({
             next: () => {
                 this.addingSubject.set(false);
-                this.showAddSubject.set(false);
-                this.successMessage.set('Subject assigned successfully.');
+                this.closeAddSubjectModal();
+                this.toast.success('Subject assigned successfully.');
                 this.loadClass(cls.id);
-                setTimeout(() => this.successMessage.set(null), 4000);
             },
             error: (err) => {
-                this.error.set(err?.error?.message ?? 'Failed to assign subject.');
+                this.toast.error('Error', err?.error?.message ?? 'Failed to assign subject.');
                 this.addingSubject.set(false);
             },
         });
     }
 
-    removeSubject(subject: Subject): void {
+    openEnrollModal(): void {
+        this.enrollForm.reset({ student_id: '' });
+        this.showEnrollModal.set(true);
+    }
+
+    closeEnrollModal(): void {
+        this.showEnrollModal.set(false);
+        this.enrollForm.reset({ student_id: '' });
+    }
+
+    onEnrollStudent(): void {
+        if (this.enrollForm.invalid) return;
         const cls = this.schoolClass();
         if (!cls) return;
-        if (!confirm(`Remove "${subject.name}" from this class?`)) return;
+        const studentId = Number(this.enrollForm.value.student_id);
+        if (!studentId) return;
+
+        this.enrolling.set(true);
+        this.classService.enrollStudent(cls.id, studentId).subscribe({
+            next: () => {
+                this.enrolling.set(false);
+                this.closeEnrollModal();
+                this.toast.success('Student enrolled successfully.');
+                this.loadClass(cls.id);
+            },
+            error: (err) => {
+                this.toast.error('Error', err?.error?.message ?? 'Failed to enroll student.');
+                this.enrolling.set(false);
+            },
+        });
+    }
+
+    async unenrollStudent(student: UserModel): Promise<void> {
+        const cls = this.schoolClass();
+        if (!cls) return;
+        const confirmed = await this.alertService.confirm({
+            title: 'Unenroll Student',
+            message: `Remove "${student.name}" from this class?`,
+            confirmText: 'Unenroll',
+            type: 'danger',
+        });
+        if (!confirmed) return;
+
+        this.classService.unenrollStudent(cls.id, student.id).subscribe({
+            next: () => {
+                this.toast.success('Student unenrolled successfully.');
+                this.loadClass(cls.id);
+            },
+            error: (err) => {
+                this.toast.error('Error', err?.error?.message ?? 'Failed to unenroll student.');
+            },
+        });
+    }
+
+    async removeSubject(subject: Subject): Promise<void> {
+        const cls = this.schoolClass();
+        if (!cls) return;
+        const confirmed = await this.alertService.confirm({
+            title: 'Remove Subject',
+            message: `Remove "${subject.name}" from this class?`,
+            confirmText: 'Remove',
+            type: 'danger',
+        });
+        if (!confirmed) return;
 
         this.classService.removeSubject(cls.id, subject.id).subscribe({
             next: () => {
-                this.successMessage.set('Subject removed successfully.');
+                this.toast.success('Subject removed successfully.');
                 this.loadClass(cls.id);
-                setTimeout(() => this.successMessage.set(null), 4000);
             },
             error: (err) => {
-                this.error.set(err?.error?.message ?? 'Failed to remove subject.');
+                this.toast.error('Error', err?.error?.message ?? 'Failed to remove subject.');
             },
         });
     }

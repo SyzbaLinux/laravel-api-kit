@@ -249,7 +249,7 @@ export class SchoolFormPage implements OnInit, OnDestroy {
                         cityId: school.city_id ? String(school.city_id) : '',
                         maxStudents: (school.max_students ?? school.maxStudents) ?? 500,
                         maxTeachers: (school.max_teachers ?? school.maxTeachers) ?? 50,
-                        subscriptionPlanId: (school.subscription_plan_id ?? school.subscriptionPlanId) ? String(school.subscription_plan_id ?? school.subscriptionPlanId) : (school.subscriptionPlan?.id ? String(school.subscriptionPlan.id) : ''),
+                        subscriptionPlanId: (school.subscription_plan_id ?? school.subscriptionPlanId) ? String(school.subscription_plan_id ?? school.subscriptionPlanId) : ((school.subscription_plan ?? school.subscriptionPlan)?.id ? String((school.subscription_plan ?? school.subscriptionPlan)!.id) : ''),
                     }, { emitEvent: false });
                 }, 100);
             }

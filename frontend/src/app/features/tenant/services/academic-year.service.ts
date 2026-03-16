@@ -2,15 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { AcademicYear, AcademicTerm, PaginatedResponse } from '../../../core/models/school-admin.models';
+import { AcademicYear, AcademicTerm } from '../../../core/models/school-admin.models';
+import { PaginatedUsersResponse } from '../models/user-management.models';
 
 @Injectable({ providedIn: 'root' })
 export class AcademicYearService {
     private readonly http = inject(HttpClient);
     private readonly apiUrl = environment.apiUrl;
 
-    getAcademicYears(params?: Record<string, unknown>): Observable<PaginatedResponse<AcademicYear>> {
-        return this.http.get<PaginatedResponse<AcademicYear>>(`${this.apiUrl}/academic-years`, { params: params as Record<string, string> });
+    getAcademicYears(params?: Record<string, unknown>): Observable<PaginatedUsersResponse<AcademicYear>> {
+        return this.http.get<PaginatedUsersResponse<AcademicYear>>(`${this.apiUrl}/academic-years`, { params: params as Record<string, string> });
     }
 
     getAcademicYear(id: number): Observable<{ data: AcademicYear }> {

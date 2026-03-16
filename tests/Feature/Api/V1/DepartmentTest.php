@@ -264,4 +264,97 @@ describe('Department Assign HOD', function (): void {
             'hod_id' => $hod->id,
         ]);
     });
+
+    it('requires hod_id field', function (): void {
+        $school = School::factory()->create();
+        $user = createSchoolAdminForDept($school);
+        $token = authTokenForDept($user);
+
+        app()->instance('current_school_id', $school->id);
+
+        $department = Department::factory()->create(['school_id' => $school->id]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->patchJson("/api/v1/departments/{$department->id}/assign-hod", []);
+
+        $response->assertStatus(422);
+    });
+
+    it('validates hod_id exists in users table', function (): void {
+        $school = School::factory()->create();
+        $user = createSchoolAdminForDept($school);
+        $token = authTokenForDept($user);
+
+        app()->instance('current_school_id', $school->id);
+
+        $department = Department::factory()->create(['school_id' => $school->id]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->patchJson("/api/v1/departments/{$department->id}/assign-hod", [
+                'hod_id' => 99999,
+            ]);
+
+        $response->assertStatus(422);
+    });
+
+    it('denies HOD assignment to teachers', function (): void {
+        $school = School::factory()->create();
+        $teacher = createTeacherForDept($school);
+        $token = authTokenForDept($teacher);
+
+        app()->instance('current_school_id', $school->id);
+
+        $department = Department::factory()->create(['school_id' => $school->id]);
+        $hod = User::factory()->create(['school_id' => $school->id]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->patchJson("/api/v1/departments/{$department->id}/assign-hod", [
+                'hod_id' => $hod->id,
+            ]);
+
+        $response->assertStatus(403);
+    });
+
+    it('can reassign HOD to a different user', function (): void {
+        $school = School::factory()->create();
+        $user = createSchoolAdminForDept($school);
+        $token = authTokenForDept($user);
+
+        app()->instance('current_school_id', $school->id);
+
+        $hodA = User::factory()->create(['school_id' => $school->id]);
+        $hodB = User::factory()->create(['school_id' => $school->id]);
+
+        $department = Department::factory()->create([
+            'school_id' => $school->id,
+            'hod_id' => $hodA->id,
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->patchJson("/api/v1/departments/{$department->id}/assign-hod", ['hod_id' => $hodB->id])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('departments', [
+            'id' => $department->id,
+            'hod_id' => $hodB->id,
+        ]);
+    });
+
+    it('returns the updated department data', function (): void {
+        $school = School::factory()->create();
+        $user = createSchoolAdminForDept($school);
+        $token = authTokenForDept($user);
+
+        app()->instance('current_school_id', $school->id);
+
+        $department = Department::factory()->create(['school_id' => $school->id]);
+        $hod = User::factory()->create(['school_id' => $school->id]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->patchJson("/api/v1/departments/{$department->id}/assign-hod", ['hod_id' => $hod->id]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.id', $department->id)
+            ->assertJsonPath('data.hod_id', $hod->id);
+    });
 });

@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { LucideAngularModule, ArrowLeft, Pencil, Power, Trash2, School, Users, GraduationCap, Mail, Phone, MapPin, CreditCard, Globe, AlertCircle, UserPlus, Trash } from 'lucide-angular';
 import { SchoolService } from '../../services/school.service';
@@ -7,11 +8,12 @@ import { ZbCard } from '../../../../shared/components/ui/zb-card';
 import { ZbButton } from '../../../../shared/components/ui/zb-button';
 import { ZbStatCard } from '../../../../shared/components/ui/zb-stat-card';
 import { CreateSchoolUserModal } from '../../components/create-school-user-modal';
+import { AssignPlanModal } from '../../components/assign-plan-modal';
 
 @Component({
     selector: 'app-school-detail',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink, LucideAngularModule, ZbCard, ZbButton, ZbStatCard, CreateSchoolUserModal],
+    imports: [RouterLink, LucideAngularModule, ZbCard, ZbButton, ZbStatCard, CreateSchoolUserModal, AssignPlanModal, CurrencyPipe],
     template: `
     <div class="px-6 py-6 lg:px-8">
 
@@ -78,9 +80,9 @@ import { CreateSchoolUserModal } from '../../components/create-school-user-modal
 
         <!-- Stats -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-          <zb-stat-card [icon]="GraduationCapIcon" iconBg="bg-primary-600" [value]="(s.studentCount ?? 0).toString()" label="Total Students" />
-          <zb-stat-card [icon]="UsersIcon" iconBg="bg-accent-600" [value]="(s.teacherCount ?? 0).toString()" label="Total Teachers" />
-          <zb-stat-card [icon]="CreditCardIcon" iconBg="bg-primary-500" [value]="s.subscriptionPlan?.name ?? 'No Plan'" label="Subscription Plan" />
+          <zb-stat-card [icon]="GraduationCapIcon" iconBg="bg-primary-600" [value]="s.studentCount.toString()" label="Total Students" />
+          <zb-stat-card [icon]="UsersIcon" iconBg="bg-accent-600" [value]="s.teacherCount.toString()" label="Total Teachers" />
+          <zb-stat-card [icon]="CreditCardIcon" iconBg="bg-primary-500" [value]="(s.subscription_plan ?? s.subscriptionPlan)?.name ?? 'No Plan'" label="Subscription Plan" />
         </div>
 
         <!-- Details Grid -->
@@ -157,23 +159,26 @@ import { CreateSchoolUserModal } from '../../components/create-school-user-modal
 
           <!-- Subscription Details -->
           <zb-card title="Subscription Details" [headerBorder]="true">
-            @if (s.subscriptionPlan) {
+            @if (s.subscription_plan ?? s.subscriptionPlan; as plan) {
               <div class="space-y-4">
                 <div class="p-4 rounded-sm bg-gradient-to-br from-primary-50 to-accent-50 dark:from-primary-950/30 dark:to-accent-950/30 border border-primary-100 dark:border-primary-800/50">
                   <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-lg font-bold text-slate-900 dark:text-white">{{ s.subscriptionPlan.name }}</h4>
-                    <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                      \${{ s.subscriptionPlan.price_monthly }}<span class="text-xs text-slate-500 font-normal">/mo</span>
-                    </span>
+                    <h4 class="text-lg font-bold text-slate-900 dark:text-white">{{ plan.name }}</h4>
+                    <div class="flex items-center gap-3">
+                      <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                        {{ plan.price_monthly | currency }}<span class="text-xs text-slate-500 font-normal">/mo</span>
+                      </span>
+                      <zb-button variant="outline" size="sm" [iconLeft]="CreditCardIcon" (clicked)="showAssignPlan.set(true)">Change Plan</zb-button>
+                    </div>
                   </div>
                   <div class="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p class="text-slate-500 dark:text-slate-400 text-xs">Max Students</p>
-                      <p class="font-semibold text-slate-900 dark:text-white">{{ s.subscriptionPlan.max_students }}</p>
+                      <p class="font-semibold text-slate-900 dark:text-white">{{ plan.max_students }}</p>
                     </div>
                     <div>
                       <p class="text-slate-500 dark:text-slate-400 text-xs">Max Teachers</p>
-                      <p class="font-semibold text-slate-900 dark:text-white">{{ s.subscriptionPlan.max_teachers }}</p>
+                      <p class="font-semibold text-slate-900 dark:text-white">{{ plan.max_teachers }}</p>
                     </div>
                   </div>
                 </div>
@@ -181,7 +186,7 @@ import { CreateSchoolUserModal } from '../../components/create-school-user-modal
                 <div>
                   <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Features Included</p>
                   <div class="flex flex-wrap gap-2">
-                    @for (feature of s.subscriptionPlan.features; track feature) {
+                    @for (feature of plan.features; track feature) {
                       <span class="px-2.5 py-1 text-xs font-medium rounded-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                         {{ feature }}
                       </span>
@@ -194,19 +199,19 @@ import { CreateSchoolUserModal } from '../../components/create-school-user-modal
                   <div>
                     <div class="flex justify-between text-xs mb-1">
                       <span class="text-slate-500 dark:text-slate-400">Student Usage</span>
-                      <span class="font-semibold text-slate-700 dark:text-slate-300">{{ s.studentCount }} / {{ s.subscriptionPlan.max_students }}</span>
+                      <span class="font-semibold text-slate-700 dark:text-slate-300">{{ s.studentCount }} / {{ plan.max_students }}</span>
                     </div>
-                    <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden" role="progressbar" [attr.aria-valuenow]="s.studentCount" [attr.aria-valuemax]="s.subscriptionPlan.max_students">
-                      <div class="h-full rounded-full bg-primary-500 transition-all" [style.width.%]="getUsagePercent(s.studentCount, s.subscriptionPlan.max_students)"></div>
+                    <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden" role="progressbar" [attr.aria-valuenow]="s.studentCount" [attr.aria-valuemax]="plan.max_students">
+                      <div class="h-full rounded-full bg-primary-500 transition-all" [style.width.%]="getUsagePercent(s.studentCount, plan.max_students)"></div>
                     </div>
                   </div>
                   <div>
                     <div class="flex justify-between text-xs mb-1">
                       <span class="text-slate-500 dark:text-slate-400">Teacher Usage</span>
-                      <span class="font-semibold text-slate-700 dark:text-slate-300">{{ s.teacherCount }} / {{ s.subscriptionPlan.max_teachers }}</span>
+                      <span class="font-semibold text-slate-700 dark:text-slate-300">{{ s.teacherCount }} / {{ plan.max_teachers }}</span>
                     </div>
-                    <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden" role="progressbar" [attr.aria-valuenow]="s.teacherCount" [attr.aria-valuemax]="s.subscriptionPlan.max_teachers">
-                      <div class="h-full rounded-full bg-accent-500 transition-all" [style.width.%]="getUsagePercent(s.teacherCount, s.subscriptionPlan.max_teachers)"></div>
+                    <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden" role="progressbar" [attr.aria-valuenow]="s.teacherCount" [attr.aria-valuemax]="plan.max_teachers">
+                      <div class="h-full rounded-full bg-accent-500 transition-all" [style.width.%]="getUsagePercent(s.teacherCount, plan.max_teachers)"></div>
                     </div>
                   </div>
                 </div>
@@ -214,9 +219,7 @@ import { CreateSchoolUserModal } from '../../components/create-school-user-modal
             } @else {
               <div class="text-center py-6">
                 <p class="text-sm text-slate-500 dark:text-slate-400">No subscription plan assigned</p>
-                <a [routerLink]="['/super-admin/schools', s.id, 'edit']">
-                  <zb-button variant="outline" size="sm" class="mt-3">Assign Plan</zb-button>
-                </a>
+                <zb-button variant="outline" size="sm" class="mt-3" (clicked)="showAssignPlan.set(true)">Assign Plan</zb-button>
               </div>
             }
           </zb-card>
@@ -295,6 +298,15 @@ import { CreateSchoolUserModal } from '../../components/create-school-user-modal
         (onClose)="showCreateUser.set(false)"
         (onCreated)="userService.loadUsers(schoolService.selectedSchool()!.id)" />
     }
+
+    <!-- Assign Plan Modal -->
+    @if (showAssignPlan() && schoolService.selectedSchool()) {
+      <app-assign-plan-modal
+        [schoolId]="schoolService.selectedSchool()!.id"
+        [currentPlanId]="(schoolService.selectedSchool()!.subscription_plan ?? schoolService.selectedSchool()!.subscriptionPlan)?.id ?? null"
+        (onClose)="showAssignPlan.set(false)"
+        (onAssigned)="onPlanAssigned()" />
+    }
   `,
 })
 export class SchoolDetailPage implements OnInit {
@@ -305,6 +317,7 @@ export class SchoolDetailPage implements OnInit {
 
     readonly errorMessage = signal('');
     readonly showCreateUser = signal(false);
+    readonly showAssignPlan = signal(false);
 
     // Icons
     readonly ArrowLeftIcon = ArrowLeft;
@@ -372,6 +385,14 @@ export class SchoolDetailPage implements OnInit {
             case 'suspended': return 'bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400';
             default: return 'bg-slate-100 text-slate-600';
         }
+    }
+
+    onPlanAssigned(): void {
+        const id = this.route.snapshot.paramMap.get('id');
+        if (id) {
+            this.schoolService.loadSchool(id);
+        }
+        this.showAssignPlan.set(false);
     }
 
     getStatusDot(status: string): string {

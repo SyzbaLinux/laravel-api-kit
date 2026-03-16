@@ -7,14 +7,22 @@ namespace App\Providers;
 use App\Models\AcademicTerm;
 use App\Models\AcademicYear;
 use App\Models\Department;
+use App\Models\GuardianProfile;
+use App\Models\School;
 use App\Models\SchoolClass;
+use App\Models\StudentProfile;
 use App\Models\Subject;
+use App\Models\TeacherProfile;
 use App\Models\Timetable;
 use App\Policies\AcademicTermPolicy;
 use App\Policies\AcademicYearPolicy;
 use App\Policies\DepartmentPolicy;
+use App\Policies\GuardianPolicy;
 use App\Policies\SchoolClassPolicy;
+use App\Policies\SchoolPolicy;
+use App\Policies\StudentPolicy;
 use App\Policies\SubjectPolicy;
+use App\Policies\TeacherPolicy;
 use App\Policies\TimetablePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -49,6 +57,10 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(AcademicYear::class, AcademicYearPolicy::class);
         Gate::policy(AcademicTerm::class, AcademicTermPolicy::class);
         Gate::policy(Timetable::class, TimetablePolicy::class);
+        Gate::policy(School::class, SchoolPolicy::class);
+        Gate::policy(TeacherProfile::class, TeacherPolicy::class);
+        Gate::policy(StudentProfile::class, StudentPolicy::class);
+        Gate::policy(GuardianProfile::class, GuardianPolicy::class);
     }
 
     /**

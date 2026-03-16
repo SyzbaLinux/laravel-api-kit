@@ -7,7 +7,8 @@ export interface DataTableColumn<T extends object> {
   label: string;
   sortable?: boolean;
   filterable?: boolean;
-  formatter?: (value: unknown) => string;
+  formatter?: (value: unknown, item?: unknown) => string;
+  htmlFormatter?: (item: T) => string;
   width?: string;
 }
 
@@ -77,7 +78,11 @@ export interface DataTableAction<T extends object> {
                 <tr class="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
                   @for (col of columns(); track col.key) {
                     <td class="px-6 py-4 text-sm text-slate-900 dark:text-slate-100">
-                      {{ col.formatter ? col.formatter(asRecord(item)[col.key]) : asRecord(item)[col.key] }}
+                      @if (col.htmlFormatter) {
+                        <span [innerHTML]="col.htmlFormatter(item)"></span>
+                      } @else {
+                        {{ col.formatter ? col.formatter(asRecord(item)[col.key], item) : asRecord(item)[col.key] }}
+                      }
                     </td>
                   }
                   @if (actions().length > 0) {

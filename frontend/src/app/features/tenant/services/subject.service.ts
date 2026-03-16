@@ -2,15 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Subject, PaginatedResponse } from '../../../core/models/school-admin.models';
+import { Subject } from '../../../core/models/school-admin.models';
+import { PaginatedUsersResponse } from '../models/user-management.models';
 
 @Injectable({ providedIn: 'root' })
 export class SubjectService {
     private readonly http = inject(HttpClient);
     private readonly apiUrl = environment.apiUrl;
 
-    getSubjects(params?: Record<string, unknown>): Observable<PaginatedResponse<Subject>> {
-        return this.http.get<PaginatedResponse<Subject>>(`${this.apiUrl}/subjects`, { params: params as Record<string, string> });
+    getSubjects(params?: Record<string, unknown>): Observable<PaginatedUsersResponse<Subject>> {
+        return this.http.get<PaginatedUsersResponse<Subject>>(`${this.apiUrl}/subjects`, { params: params as Record<string, string> });
     }
 
     getSubject(id: number): Observable<{ data: Subject }> {

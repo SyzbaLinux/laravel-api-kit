@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -103,7 +104,11 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function isSuperAdmin(): bool
     {
-        if ($this->relationLoaded('roles')) {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        if ($this->roles->isNotEmpty()) {
             return $this->roles->contains('name', Role::SUPER_ADMIN);
         }
 
@@ -112,7 +117,11 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function isSchoolAdmin(): bool
     {
-        if ($this->relationLoaded('roles')) {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        if ($this->roles->isNotEmpty()) {
             return $this->roles->contains('name', Role::SCHOOL_ADMIN);
         }
 
@@ -121,11 +130,15 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function hasRole(string $roleName): bool
     {
-        // Check pivot roles first, fall back to single role_id
-        if ($this->relationLoaded('roles')) {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        if ($this->roles->isNotEmpty()) {
             return $this->roles->contains('name', $roleName);
         }
 
+        // Fall back to single role_id
         return $this->role?->name === $roleName;
     }
 
@@ -136,5 +149,49 @@ final class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $this->role?->permissions()->where('name', $permissionName)->exists() ?? false;
+    }
+
+    /**
+     * @return HasOne<TeacherProfile, $this>
+     */
+    public function teacherProfile(): HasOne
+    {
+        return $this->hasOne(TeacherProfile::class);
+    }
+
+    /**
+     * @return HasOne<StudentProfile, $this>
+     */
+    public function studentProfile(): HasOne
+    {
+        return $this->hasOne(StudentProfile::class);
+    }
+
+    /**
+     * @return HasOne<GuardianProfile, $this>
+     */
+    public function guardianProfile(): HasOne
+    {
+        return $this->hasOne(GuardianProfile::class);
+    }
+
+    /**
+     * @return BelongsToMany<User, $this>
+     */
+    public function linkedStudents(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'guardian_student', 'guardian_id', 'student_id')
+            ->withPivot('is_primary')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<User, $this>
+     */
+    public function guardians(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'guardian_student', 'student_id', 'guardian_id')
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 }

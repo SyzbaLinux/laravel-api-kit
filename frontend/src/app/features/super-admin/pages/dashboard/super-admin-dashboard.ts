@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, AfterViewInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule, School, Users, GraduationCap, CreditCard, TrendingUp, ArrowRight, Plus, Activity } from 'lucide-angular';
 import { SchoolService } from '../../services/school.service';
@@ -119,32 +119,19 @@ import { ZbButton } from '../../../../shared/components/ui/zb-button';
           </zb-card>
         </div>
 
-        <!-- Plans Distribution -->
-        <div>
+        <!-- Charts Column -->
+        <div class="space-y-6">
+          <!-- Donut: Plan Distribution -->
           <zb-card title="Plan Distribution" subtitle="Schools per subscription plan" [headerBorder]="true">
-            <div class="space-y-4">
-              @for (plan of stats()?.schoolsByPlan ?? []; track plan.planName) {
-                <div>
-                  <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ plan.planName }}</span>
-                    <span class="text-sm font-bold text-slate-900 dark:text-white">{{ plan.count }}</span>
-                  </div>
-                  <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all duration-700 ease-out"
-                      [class]="getPlanBarColor(plan.planName)"
-                      [style.width.%]="getBarWidth(plan.count)">
-                    </div>
-                  </div>
-                </div>
-              }
-
-              @if (!stats()?.schoolsByPlan?.length && !schoolService.statsLoading()) {
+            <div id="chart-plans" class="min-h-[200px] flex items-center justify-center">
+              @if (schoolService.statsLoading()) {
+                <div class="w-7 h-7 rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-primary-600 animate-spin"></div>
+              } @else if (!stats()?.schoolsByPlan?.length) {
                 <p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No plan data available</p>
               }
             </div>
 
-            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <a routerLink="/super-admin/plans"
                  class="inline-flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">
                 Manage plans
@@ -153,8 +140,26 @@ import { ZbButton } from '../../../../shared/components/ui/zb-button';
             </div>
           </zb-card>
 
+          <!-- Bar: School Status -->
+          <zb-card title="School Status" subtitle="Active vs Inactive vs Suspended" [headerBorder]="true">
+            <div id="chart-status" class="min-h-[180px] flex items-center justify-center">
+              @if (schoolService.statsLoading()) {
+                <div class="w-7 h-7 rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-primary-600 animate-spin"></div>
+              }
+            </div>
+          </zb-card>
+
+          <!-- Area: Students vs Teachers -->
+          <zb-card title="User Counts" subtitle="Students and teachers platform-wide" [headerBorder]="true">
+            <div id="chart-users" class="min-h-[180px] flex items-center justify-center">
+              @if (schoolService.statsLoading()) {
+                <div class="w-7 h-7 rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-primary-600 animate-spin"></div>
+              }
+            </div>
+          </zb-card>
+
           <!-- Quick Actions -->
-          <zb-card title="Quick Actions" class="mt-6">
+          <zb-card title="Quick Actions">
             <div class="space-y-2">
               <a routerLink="/super-admin/schools/create"
                  class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-primary-200 dark:hover:border-primary-800 hover:bg-primary-50/50 dark:hover:bg-primary-950/20 transition-all group">
@@ -189,6 +194,7 @@ export class SuperAdminDashboard implements OnInit {
     private readonly router = inject(Router);
 
     readonly stats = this.schoolService.stats;
+    private chartsRendered = signal(false);
 
     // Icons
     readonly SchoolIcon = School;
@@ -202,6 +208,83 @@ export class SuperAdminDashboard implements OnInit {
 
     ngOnInit(): void {
         this.schoolService.loadStats();
+        // Poll until stats are loaded then render charts
+        const checkAndRender = () => {
+            if (!this.schoolService.statsLoading() && this.stats()) {
+                setTimeout(() => this.renderCharts(), 50);
+            } else {
+                setTimeout(checkAndRender, 200);
+            }
+        };
+        setTimeout(checkAndRender, 200);
+    }
+
+    private renderCharts(): void {
+        if (this.chartsRendered()) return;
+        const s = this.stats();
+        if (!s) return;
+
+        import('apexcharts').then(({ default: ApexCharts }) => {
+            this.chartsRendered.set(true);
+
+            // Chart 1: Donut — plan distribution
+            const planEl = document.querySelector('#chart-plans') as HTMLElement | null;
+            if (planEl && s.schoolsByPlan?.length) {
+                planEl.innerHTML = '';
+                const planChart = new ApexCharts(planEl, {
+                    chart: { type: 'donut', height: 220, toolbar: { show: false } },
+                    series: s.schoolsByPlan.map(p => p.count),
+                    labels: s.schoolsByPlan.map(p => p.planName),
+                    colors: ['#0072ab', '#41a748', '#f59e0b', '#6366f1'],
+                    legend: { position: 'bottom', fontSize: '12px' },
+                    dataLabels: { enabled: true, formatter: (val: number) => `${Math.round(val)}%` },
+                    plotOptions: { pie: { donut: { size: '60%' } } },
+                    tooltip: { y: { formatter: (val: number) => `${val} schools` } },
+                });
+                planChart.render();
+            }
+
+            // Chart 2: Bar — active vs inactive vs suspended
+            const statusEl = document.querySelector('#chart-status') as HTMLElement | null;
+            if (statusEl) {
+                statusEl.innerHTML = '';
+                const inactiveCount = (s.totalSchools ?? 0) - (s.activeSchools ?? 0);
+                const statusChart = new ApexCharts(statusEl, {
+                    chart: { type: 'bar', height: 180, toolbar: { show: false } },
+                    series: [{ name: 'Schools', data: [s.activeSchools ?? 0, inactiveCount, 0] }],
+                    xaxis: { categories: ['Active', 'Inactive', 'Suspended'] },
+                    colors: ['#41a748', '#94a3b8', '#ef4444'],
+                    plotOptions: { bar: { distributed: true, borderRadius: 4, columnWidth: '50%' } },
+                    legend: { show: false },
+                    dataLabels: { enabled: false },
+                    yaxis: { labels: { show: false } },
+                    grid: { show: false },
+                });
+                statusChart.render();
+            }
+
+            // Chart 3: Bar comparison — students vs teachers
+            const usersEl = document.querySelector('#chart-users') as HTMLElement | null;
+            if (usersEl) {
+                usersEl.innerHTML = '';
+                const usersChart = new ApexCharts(usersEl, {
+                    chart: { type: 'bar', height: 180, toolbar: { show: false } },
+                    series: [
+                        { name: 'Students', data: [s.totalStudents ?? 0] },
+                        { name: 'Teachers', data: [s.totalTeachers ?? 0] },
+                    ],
+                    xaxis: { categories: ['Platform Total'] },
+                    colors: ['#0072ab', '#41a748'],
+                    plotOptions: { bar: { borderRadius: 4, columnWidth: '40%' } },
+                    dataLabels: { enabled: false },
+                    legend: { position: 'top', fontSize: '12px' },
+                    grid: { show: false },
+                });
+                usersChart.render();
+            }
+        }).catch(() => {
+            // ApexCharts not available, graceful fallback
+        });
     }
 
     onAddSchool(): void {

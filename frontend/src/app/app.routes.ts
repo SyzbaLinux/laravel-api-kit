@@ -44,6 +44,42 @@ export const routes: Routes = [
                 path: 'dashboard',
                 loadComponent: () => import('./features/tenant/pages/dashboard/tenant-dashboard').then(m => m.TenantDashboard),
             },
+            // Teachers
+            {
+                path: 'teachers',
+                loadComponent: () => import('./features/tenant/pages/teachers/teacher-list').then(m => m.TeacherList),
+            },
+            {
+                path: 'teachers/import',
+                loadComponent: () => import('./features/tenant/pages/teachers/teacher-import').then(m => m.TeacherImport),
+            },
+            {
+                path: 'teachers/:id',
+                loadComponent: () => import('./features/tenant/pages/teachers/teacher-detail').then(m => m.TeacherDetail),
+            },
+            // Students
+            {
+                path: 'students',
+                loadComponent: () => import('./features/tenant/pages/students/student-list').then(m => m.StudentList),
+            },
+            {
+                path: 'students/import',
+                loadComponent: () => import('./features/tenant/pages/students/student-import').then(m => m.StudentImport),
+            },
+            {
+                path: 'students/:id',
+                loadComponent: () => import('./features/tenant/pages/students/student-detail').then(m => m.StudentDetail),
+            },
+            // Guardians
+            {
+                path: 'guardians',
+                loadComponent: () => import('./features/tenant/pages/guardians/guardian-list').then(m => m.GuardianList),
+            },
+            {
+                path: 'guardians/:id',
+                loadComponent: () => import('./features/tenant/pages/guardians/guardian-detail').then(m => m.GuardianDetail),
+            },
+            // School administration
             {
                 path: 'departments',
                 loadComponent: () => import('./features/tenant/pages/departments/department-list').then(m => m.DepartmentList),
@@ -67,6 +103,27 @@ export const routes: Routes = [
             {
                 path: 'timetable',
                 loadComponent: () => import('./features/tenant/pages/timetable/timetable-view').then(m => m.TimetableView),
+            },
+            // Profile
+            {
+                path: 'profile',
+                loadComponent: () => import('./features/tenant/pages/profile/profile-page').then(m => m.ProfilePage),
+            },
+            // Coming soon pages
+            {
+                path: 'learning',
+                loadComponent: () => import('./shared/components/coming-soon/coming-soon').then(m => m.ComingSoon),
+                data: { pageName: 'Learning Management' },
+            },
+            {
+                path: 'communication',
+                loadComponent: () => import('./shared/components/coming-soon/coming-soon').then(m => m.ComingSoon),
+                data: { pageName: 'Communication' },
+            },
+            {
+                path: 'settings',
+                loadComponent: () => import('./shared/components/coming-soon/coming-soon').then(m => m.ComingSoon),
+                data: { pageName: 'Settings' },
             },
             {
                 path: '',

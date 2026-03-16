@@ -141,6 +141,19 @@ export class SchoolService {
         );
     }
 
+    assignPlan(schoolId: string, planId: number | null): Observable<{ data: School }> {
+        return this.http.patch<{ data: School }>(`${this.baseUrl}/${schoolId}/assign-plan`, { subscription_plan_id: planId }).pipe(
+            tap({
+                next: (res) => {
+                    this._schools.update(list => list.map(s => (s.id === schoolId ? res.data : s)));
+                    if (this._selectedSchool()?.id === schoolId) {
+                        this._selectedSchool.set(res.data);
+                    }
+                },
+            }),
+        );
+    }
+
     toggleStatus(id: string, status: SchoolStatus): Observable<{ data: School }> {
         this._loading.set(true);
         return this.http.patch<{ data: School }>(`${this.baseUrl}/${id}/toggle-status`, { status }).pipe(

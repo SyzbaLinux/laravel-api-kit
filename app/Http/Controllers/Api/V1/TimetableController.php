@@ -22,7 +22,8 @@ final class TimetableController extends ApiController
         $this->authorize('viewAny', Timetable::class);
 
         $classId = $request->integer('class_id');
-        $timetables = $this->timetableService->list($classId);
+        $termId = $request->integer('term_id') ?: null;
+        $timetables = $this->timetableService->list($classId, $termId);
 
         return $this->success($timetables, 'Timetables retrieved successfully');
     }

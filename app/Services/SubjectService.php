@@ -33,7 +33,7 @@ final class SubjectService
 
     public function findById(int $id): Subject
     {
-        return Subject::query()->with('department')->findOrFail($id);
+        return Subject::query()->with(['department', 'classes'])->findOrFail($id);
     }
 
     public function create(SubjectData $data): Subject

@@ -117,7 +117,7 @@ export class SchoolListPage implements OnInit {
             formatter: (val) => String(val ?? ''),
         },
         {
-            key: 'subscriptionPlan',
+            key: 'subscription_plan',
             label: 'Plan',
             sortable: false,
             formatter: (val: any) => val?.name ?? 'None',

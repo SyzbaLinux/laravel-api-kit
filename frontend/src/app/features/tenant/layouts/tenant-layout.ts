@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
-import { LucideAngularModule, LayoutDashboard, Users, BookOpen, MessageSquare, Settings, LogOut, Menu, User, Bell, Search, Building2, BookMarked, Calendar, Clock, School, GraduationCap } from 'lucide-angular';
+import { LucideAngularModule, LayoutDashboard, Users, BookOpen, MessageSquare, Settings, LogOut, Menu, User, Bell, Search, Building2, BookMarked, Calendar, Clock, School, GraduationCap, HeartHandshake } from 'lucide-angular';
 import { ThemeToggle } from '../../../shared/components/theme-toggle/theme-toggle';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -57,7 +57,7 @@ interface MenuItem {
 
         <!-- Navigation -->
         <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Main navigation">
-          @for (item of menuItems; track item.route) {
+          @for (item of menuItems(); track item.route) {
             <a
               [routerLink]="item.route"
               routerLinkActive="active-nav"
@@ -76,7 +76,20 @@ interface MenuItem {
         </nav>
 
         <!-- Footer -->
-        <div class="border-t border-slate-100 dark:border-slate-800 p-3 flex-shrink-0 space-y-2">
+        <div class="border-t border-slate-100 dark:border-slate-800 p-3 flex-shrink-0 space-y-1">
+          <!-- Profile Link -->
+          <a
+            routerLink="/tenant/profile"
+            routerLinkActive="active-nav"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMobile()"
+            class="nav-link group flex items-center gap-3 px-3 py-2 rounded-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200">
+            <div class="nav-icon w-8 h-8 flex items-center justify-center rounded-sm bg-slate-100 dark:bg-slate-800 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 transition-colors flex-shrink-0">
+              <lucide-icon [img]="UserIcon" [size]="16" class="transition-colors"></lucide-icon>
+            </div>
+            <span class="nav-label text-sm font-medium">My Profile</span>
+          </a>
+
           <div class="flex items-center justify-between gap-2.5 p-2.5 rounded-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             <div class="flex items-center gap-2 min-w-0">
               <div class="w-9 h-9 rounded-sm bg-primary-600 flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -182,10 +195,11 @@ export class TenantLayout {
     readonly BellIcon = Bell;
     readonly SearchIcon = Search;
 
-    readonly menuItems: MenuItem[] = [
+    private readonly allMenuItems: MenuItem[] = [
         { label: 'Dashboard', route: '/tenant/dashboard', icon: LayoutDashboard },
         { label: 'Students', route: '/tenant/students', icon: GraduationCap },
         { label: 'Teachers', route: '/tenant/teachers', icon: Users },
+        { label: 'Guardians', route: '/tenant/guardians', icon: HeartHandshake },
         { label: 'Departments', route: '/tenant/departments', icon: Building2 },
         { label: 'Subjects', route: '/tenant/subjects', icon: BookMarked },
         { label: 'Classes', route: '/tenant/classes', icon: School },
@@ -195,6 +209,23 @@ export class TenantLayout {
         { label: 'Communication', route: '/tenant/communication', icon: MessageSquare },
         { label: 'Settings', route: '/tenant/settings', icon: Settings },
     ];
+
+    private readonly roleMenuRoutes: Record<string, string[]> = {
+        school_admin: ['/tenant/dashboard', '/tenant/students', '/tenant/teachers', '/tenant/guardians', '/tenant/departments', '/tenant/subjects', '/tenant/classes', '/tenant/academic-years', '/tenant/timetable', '/tenant/learning', '/tenant/communication', '/tenant/settings'],
+        teacher: ['/tenant/dashboard', '/tenant/classes', '/tenant/subjects', '/tenant/timetable', '/tenant/learning', '/tenant/communication'],
+        class_teacher: ['/tenant/dashboard', '/tenant/classes', '/tenant/subjects', '/tenant/timetable'],
+        hod: ['/tenant/dashboard', '/tenant/departments', '/tenant/subjects', '/tenant/classes', '/tenant/timetable'],
+    };
+
+    readonly menuItems = computed<MenuItem[]>(() => {
+        const role = this.authService.currentUser()?.role?.name;
+        if (!role || role === 'school_admin' || role === 'super_admin') {
+            return this.allMenuItems;
+        }
+        const allowed = this.roleMenuRoutes[role];
+        if (!allowed) return this.allMenuItems;
+        return this.allMenuItems.filter(item => allowed.includes(item.route));
+    });
 
     toggleMobileMenu(): void {
         this.isMobileOpen.update(v => !v);
