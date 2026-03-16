@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('enrolled_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['student_id', 'school_class_id', 'academic_year_id']);
+            $table->unique(['student_id', 'school_class_id', 'academic_year_id'], 'ce_student_class_year_unique');
         });
     }
 
