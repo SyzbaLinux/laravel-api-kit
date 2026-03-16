@@ -10,12 +10,17 @@ import {
     BookOpen, ChevronRight, AlertCircle, CheckCircle2,
 } from 'lucide-angular';
 import { DashboardService, SchoolStats } from '../../services/dashboard.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { TeacherDashboard } from './teacher-dashboard';
 
 @Component({
     selector: 'app-tenant-dashboard',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [LucideAngularModule, RouterLink],
+    imports: [LucideAngularModule, RouterLink, TeacherDashboard],
     template: `
+    @if (isTeacherRole()) {
+      <app-teacher-dashboard />
+    } @else {
     <div class="p-6 lg:p-8 space-y-6">
 
       <!-- Page Header -->
@@ -282,11 +287,18 @@ import { DashboardService, SchoolStats } from '../../services/dashboard.service'
         </div>
       }
     </div>
+    } <!-- end @else isTeacherRole -->
   `,
 })
 export class TenantDashboard implements OnInit {
     private readonly dashboardService = inject(DashboardService);
+    private readonly authService = inject(AuthService);
     private readonly platformId = inject(PLATFORM_ID);
+
+    readonly isTeacherRole = computed(() => {
+        const role = this.authService.currentUser()?.role?.name;
+        return role === 'teacher' || role === 'class_teacher';
+    });
 
     readonly GraduationCapIcon = GraduationCap;
     readonly UsersIcon = Users;
@@ -343,7 +355,9 @@ export class TenantDashboard implements OnInit {
     }
 
     ngOnInit(): void {
-        this.loadStats();
+        if (!this.isTeacherRole()) {
+            this.loadStats();
+        }
     }
 
     loadStats(): void {

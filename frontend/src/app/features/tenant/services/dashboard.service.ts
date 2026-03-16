@@ -49,6 +49,33 @@ export interface SchoolStats {
     };
 }
 
+export interface TeacherScheduleEntry {
+    id: number;
+    start_time: string;
+    end_time: string;
+    subject: { id: number; name: string; code: string } | null;
+    school_class: { id: number; name: string; grade_level: string } | null;
+}
+
+export interface TeacherClass {
+    id: number;
+    name: string;
+    grade_level: string;
+    students_count: number;
+    subjects: { id: number; name: string; code: string }[];
+}
+
+export interface TeacherStats {
+    classes_count: number;
+    subjects_count: number;
+    today_periods: number;
+    students_count: number;
+    current_year: CurrentPeriod | null;
+    current_term: CurrentPeriod | null;
+    today_schedule: TeacherScheduleEntry[];
+    my_classes: TeacherClass[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
     private readonly http = inject(HttpClient);
@@ -56,5 +83,9 @@ export class DashboardService {
 
     getStats(): Observable<{ success: boolean; data: SchoolStats }> {
         return this.http.get<{ success: boolean; data: SchoolStats }>(`${this.baseUrl}/dashboard/stats`);
+    }
+
+    getTeacherStats(): Observable<{ success: boolean; data: TeacherStats }> {
+        return this.http.get<{ success: boolean; data: TeacherStats }>(`${this.baseUrl}/dashboard/teacher-stats`);
     }
 }

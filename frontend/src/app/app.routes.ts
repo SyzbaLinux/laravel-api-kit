@@ -102,6 +102,10 @@ export const routes: Routes = [
             },
             {
                 path: 'timetable',
+                loadComponent: () => import('./features/tenant/pages/timetable/timetable-selector').then(m => m.TimetableSelector),
+            },
+            {
+                path: 'timetable/:classId/:termId',
                 loadComponent: () => import('./features/tenant/pages/timetable/timetable-view').then(m => m.TimetableView),
             },
             // Profile

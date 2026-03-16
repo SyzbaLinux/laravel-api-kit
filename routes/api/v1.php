@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\SubscriptionPlanController;
 use App\Http\Controllers\Api\V1\TeacherController;
 use App\Http\Controllers\Api\V1\TimetableController;
 use App\Http\Controllers\Api\V1\SchoolDashboardController;
+use App\Http\Controllers\Api\V1\TeacherDashboardController;
 use App\Http\Controllers\Api\V1\SchoolUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -98,6 +99,9 @@ Route::middleware(['auth:sanctum', 'throttle:authenticated', 'tenant'])->group(f
 
     Route::get('dashboard/stats', [SchoolDashboardController::class, 'stats'])
         ->name('api.v1.dashboard.stats');
+
+    Route::get('dashboard/teacher-stats', [TeacherDashboardController::class, 'stats'])
+        ->name('api.v1.dashboard.teacher-stats');
 
     Route::post('teachers/import', [TeacherController::class, 'import']);
     Route::apiResource('teachers', TeacherController::class);
