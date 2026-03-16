@@ -22,14 +22,14 @@ final class DatabaseSeeder extends Seeder
     {
         // Geo data seeders — disable FK checks because the bundled
         // city/state data has cross-country references not all present.
-        DB::statement('PRAGMA foreign_keys = OFF');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         $this->call([
             CountryTableSeeder::class,
             StateTableSeeder::class,
             CitySeeder::class,
             CountryTimezoneSeeder::class,
         ]);
-        DB::statement('PRAGMA foreign_keys = ON');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $this->call([
             RoleSeeder::class,
