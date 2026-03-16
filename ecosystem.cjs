@@ -1,47 +1,13 @@
-/**
- * PM2 Ecosystem — schools.emmanuelsiziba.co.zw
- *
- * Manages:
- *  1. Angular SSR server  (Node.js,  port 4300)
- *  2. Laravel API server  (PHP,      port 4301)
- *  3. Laravel Queue Worker (PHP)
- *
- * Usage:
- *   pm2 start ecosystem.cjs
- *   pm2 save
- *   pm2 startup   ← run the generated command as root
- *
- * Before starting, build the frontend:
- *   cd /var/www/schools.emmanuelsiziba.co.zw/frontend && npm run build
- */
+
 
 const ROOT = '/var/www/schools.emmanuelsiziba.co.zw';
 
 module.exports = {
     apps: [
-        // ─────────────────────────────────────────────
-        // 1. Angular SSR (Node.js Express server)
-        // ─────────────────────────────────────────────
-        {
-            name: 'schools-frontend',
-            script: `${ROOT}/frontend/dist/apppp/server/server.mjs`,
-            interpreter: 'node',
-            instances: 1,           // increase to 'max' for cluster mode if desired
-            exec_mode: 'fork',
-            watch: false,
-            env: {
-                NODE_ENV: 'production',
-                PORT: 4300,
-            },
-            error_file: `${ROOT}/logs/frontend-error.log`,
-            out_file: `${ROOT}/logs/frontend-out.log`,
-            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-            restart_delay: 4300,
-            max_restarts: 10,
-        },
+
 
         // ─────────────────────────────────────────────
-        // 2. Laravel API Server (php artisan serve)
+        // 1. Laravel API Server (php artisan serve)
         // ─────────────────────────────────────────────
         {
             name: 'schools-api',
@@ -61,7 +27,7 @@ module.exports = {
         },
 
         // ─────────────────────────────────────────────
-        // 3. Laravel Queue Worker
+        // 2. Laravel Queue Worker
         // ─────────────────────────────────────────────
         {
             name: 'schools-queue',
