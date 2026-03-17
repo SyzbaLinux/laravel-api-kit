@@ -15,6 +15,7 @@ export interface AuthUser {
     email: string;
     role: AuthRole | null;
     school_id: number | null;
+    school_name: string | null;
     school_education_level: 'ecd' | 'primary' | 'secondary' | 'combined' | null;
     is_active: boolean;
     email_verified_at: string | null;

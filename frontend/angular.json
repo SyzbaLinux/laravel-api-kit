@@ -27,7 +27,20 @@
             "styles": ["src/styles.css"],
             "security": {
               "allowedHosts": []
-            }
+            },
+            "allowedCommonJsDependencies": [
+              "html2canvas",
+              "canvg",
+              "rgbcolor",
+              "raf",
+              "core-js",
+              "dayjs",
+              "dayjs/plugin/isSameOrAfter",
+              "dayjs/plugin/isSameOrBefore",
+              "dayjs/plugin/isBetween",
+              "dayjs/plugin/isoWeek",
+              "dayjs/plugin/customParseFormat"
+            ]
           },
           "configurations": {
             "production": {

@@ -18,34 +18,61 @@ final class PlatformStatsService
     public function getStats(): array
     {
         return [
-            'total_schools' => School::query()->count(),
-            'active_schools' => School::query()->where('status', SchoolStatus::ACTIVE)->count(),
-            'inactive_schools' => School::query()->where('status', SchoolStatus::INACTIVE)->count(),
-            'suspended_schools' => School::query()->where('status', SchoolStatus::SUSPENDED)->count(),
-            'total_users' => User::query()->count(),
-            'total_students' => User::query()->whereHas('role', fn ($q) => $q->where('name', Role::STUDENT))->count(),
-            'total_teachers' => User::query()->whereHas('role', fn ($q) => $q->whereIn('name', [Role::TEACHER, Role::CLASS_TEACHER]))->count(),
-            'plan_distribution' => $this->getPlanDistribution(),
+            'totalSchools' => School::query()->count(),
+            'activeSchools' => School::query()->where('status', SchoolStatus::ACTIVE)->count(),
+            'inactiveSchools' => School::query()->where('status', SchoolStatus::INACTIVE)->count(),
+            'suspendedSchools' => School::query()->where('status', SchoolStatus::SUSPENDED)->count(),
+            'totalUsers' => User::query()->count(),
+            'totalStudents' => User::query()->whereHas('role', fn ($q) => $q->where('name', Role::STUDENT))->count(),
+            'totalTeachers' => User::query()->whereHas('role', fn ($q) => $q->whereIn('name', [Role::TEACHER, Role::CLASS_TEACHER]))->count(),
+            'schoolsByPlan' => $this->getSchoolsByPlan(),
+            'recentSchools' => $this->getRecentSchools(),
         ];
     }
 
     /**
-     * @return array<string, int>
+     * @return array<int, array{planName: string, count: int}>
      */
-    private function getPlanDistribution(): array
+    private function getSchoolsByPlan(): array
     {
         $plans = SubscriptionPlan::query()
             ->withCount('schools')
             ->get();
 
-        $distribution = [];
-        foreach ($plans as $plan) {
-            $distribution[$plan->name] = $plan->schools_count;
+        $result = $plans->map(fn ($plan) => [
+            'planName' => $plan->name,
+            'count' => $plan->schools_count,
+        ])->values()->all();
+
+        $noPlanCount = School::query()->whereNull('subscription_plan_id')->count();
+        if ($noPlanCount > 0) {
+            $result[] = ['planName' => 'No Plan', 'count' => $noPlanCount];
         }
 
-        $distribution['no_plan'] = School::query()->whereNull('subscription_plan_id')->count();
+        return $result;
+    }
 
-        return $distribution;
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function getRecentSchools(): array
+    {
+        return School::query()
+            ->with('subscriptionPlan:id,name')
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'name', 'slug', 'status', 'education_level', 'subscription_plan_id', 'created_at'])
+            ->map(fn ($school) => [
+                'id' => (string) $school->id,
+                'name' => $school->name,
+                'slug' => $school->slug,
+                'status' => $school->status->value,
+                'education_level' => $school->education_level->value,
+                'studentCount' => $school->studentCount,
+                'teacherCount' => $school->teacherCount,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

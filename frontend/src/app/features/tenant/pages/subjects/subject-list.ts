@@ -27,7 +27,9 @@ import { ZbDatatable, DataTableColumn, DataTableAction } from '../../../../share
           <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Subjects</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage school subjects across all departments</p>
         </div>
-        <zb-button [iconLeft]="BookMarkedIcon" (clicked)="openCreateModal()">Add Subject</zb-button>
+        @if (isAdmin()) {
+          <zb-button [iconLeft]="BookMarkedIcon" (clicked)="openCreateModal()">Add Subject</zb-button>
+        }
       </div>
 
       <!-- Table Card -->
@@ -40,7 +42,7 @@ import { ZbDatatable, DataTableColumn, DataTableAction } from '../../../../share
           <zb-datatable
             [data]="subjects()"
             [columns]="tableColumns"
-            [actions]="tableActions" />
+            [actions]="tableActions()" />
         }
       </div>
     </div>
@@ -118,6 +120,8 @@ export class SubjectList implements OnInit {
     readonly BookMarkedIcon = BookMarked;
     readonly LinkIcon = Link;
 
+    readonly isAdmin = computed(() => ['school_admin', 'hod'].includes(this.authService.userRole() ?? ''));
+
     readonly assigningSubject = signal<Subject | null>(null);
     readonly subjects = signal<Subject[]>([]);
     readonly departments = signal<Department[]>([]);
@@ -164,13 +168,16 @@ export class SubjectList implements OnInit {
         },
     ];
 
-    readonly tableActions: DataTableAction<Subject>[] = [
-        { label: 'Assign', variant: 'secondary', size: 'sm', callback: s => this.openAssign(s) },
-        { label: 'Activate', variant: 'outline', size: 'sm', visible: s => !s.is_active, callback: s => this.toggleActive(s) },
-        { label: 'Deactivate', variant: 'outline', size: 'sm', visible: s => s.is_active, callback: s => this.toggleActive(s) },
-        { label: 'Edit', variant: 'outline', size: 'sm', callback: s => this.editSubject(s) },
-        { label: 'Delete', variant: 'danger', size: 'sm', callback: s => this.deleteSubject(s) },
-    ];
+    readonly tableActions = computed<DataTableAction<Subject>[]>(() => {
+        if (!this.isAdmin()) return [];
+        return [
+            { label: 'Assign', variant: 'secondary', size: 'sm', callback: s => this.openAssign(s) },
+            { label: 'Activate', variant: 'outline', size: 'sm', visible: s => !s.is_active, callback: s => this.toggleActive(s) },
+            { label: 'Deactivate', variant: 'outline', size: 'sm', visible: s => s.is_active, callback: s => this.toggleActive(s) },
+            { label: 'Edit', variant: 'outline', size: 'sm', callback: s => this.editSubject(s) },
+            { label: 'Delete', variant: 'danger', size: 'sm', callback: s => this.deleteSubject(s) },
+        ];
+    });
 
     ngOnInit(): void {
         this.loadSubjects();

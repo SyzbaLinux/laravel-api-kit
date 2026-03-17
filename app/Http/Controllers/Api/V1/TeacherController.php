@@ -68,10 +68,20 @@ final class TeacherController extends ApiController
     {
         $this->authorize('viewAny', TeacherProfile::class);
 
-        $classes = SchoolClass::query()
+        // Classes where teacher is the class teacher — include ALL subjects
+        $classTeacherClasses = SchoolClass::query()
+            ->where('class_teacher_id', $teacher->id)
+            ->with('subjects')
+            ->get();
+
+        // Classes where teacher is assigned to specific subjects — include only those subjects
+        $subjectTeacherClasses = SchoolClass::query()
             ->whereHas('subjects', fn ($q) => $q->where('class_subject.teacher_id', $teacher->id))
+            ->whereNotIn('id', $classTeacherClasses->pluck('id'))
             ->with(['subjects' => fn ($q) => $q->where('class_subject.teacher_id', $teacher->id)])
             ->get();
+
+        $classes = $classTeacherClasses->merge($subjectTeacherClasses)->values();
 
         return $this->success($classes, 'Teacher assignments retrieved successfully');
     }

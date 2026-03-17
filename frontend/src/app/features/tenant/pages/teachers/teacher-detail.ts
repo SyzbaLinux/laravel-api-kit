@@ -7,12 +7,15 @@ import { LucideAngularModule, ArrowLeft, User, Phone, Mail, Briefcase, Graduatio
 import { TeacherService } from '../../services/teacher.service';
 import { Teacher } from '../../models/user-management.models';
 import { SchoolClass, Subject } from '../../../../core/models/school-admin.models';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { AlertService } from '../../../../shared/services/alert.service';
+import { ZbButton } from '../../../../shared/components/ui/zb-button';
 import { environment } from '../../../../../environments/environment';
 
 @Component({
     selector: 'app-teacher-detail',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink, ReactiveFormsModule, LucideAngularModule],
+    imports: [RouterLink, ReactiveFormsModule, LucideAngularModule, ZbButton],
     template: `
     <div class="p-6 lg:p-8">
       <!-- Header -->
@@ -261,7 +264,17 @@ import { environment } from '../../../../../environments/environment';
                           <p class="text-xs text-slate-500 dark:text-slate-400">{{ sub.name }} &middot; {{ sub.code }}</p>
                         </div>
                       </div>
-                      <span class="text-xs text-slate-400 hidden sm:block">{{ cls.grade_level }}</span>
+                      <div class="flex items-center gap-3">
+                        <span class="text-xs text-slate-400 hidden sm:block">{{ cls.grade_level }}</span>
+                        <zb-button
+                          variant="danger"
+                          size="sm"
+                          [loading]="unassigning()"
+                          (clicked)="onUnassign(cls, sub)"
+                          [attr.aria-label]="'Remove from ' + cls.name + ' – ' + sub.name">
+                          Remove
+                        </zb-button>
+                      </div>
                     </div>
                   }
                 }
@@ -278,6 +291,8 @@ export class TeacherDetail implements OnInit {
     private readonly http = inject(HttpClient);
     private readonly route = inject(ActivatedRoute);
     private readonly fb = inject(FormBuilder);
+    private readonly toast = inject(ToastService);
+    private readonly alertService = inject(AlertService);
 
     // Icons
     readonly ArrowLeftIcon = ArrowLeft;
@@ -304,6 +319,7 @@ export class TeacherDetail implements OnInit {
     readonly availableSubjects = signal<Subject[]>([]);
     readonly showAssignForm = signal(false);
     readonly assigning = signal(false);
+    readonly unassigning = signal(false);
     readonly assignError = signal<string | null>(null);
     readonly assignSuccess = signal<string | null>(null);
 
@@ -374,6 +390,29 @@ export class TeacherDetail implements OnInit {
         this.assignForm.reset();
         this.assignError.set(null);
         this.assignSuccess.set(null);
+    }
+
+    async onUnassign(cls: SchoolClass, sub: Subject): Promise<void> {
+        const confirmed = await this.alertService.confirm({
+            title: 'Remove Assignment',
+            message: `Remove this teacher from "${sub.name}" in ${cls.name}?`,
+            confirmText: 'Remove',
+            type: 'danger',
+        });
+        if (!confirmed) return;
+
+        this.unassigning.set(true);
+        this.teacherService.unassignTeacherFromSubjectInClass(cls.id, sub.id).subscribe({
+            next: () => {
+                this.unassigning.set(false);
+                this.toast.success('Teacher removed from assignment.');
+                this.loadAssignments(this.teacherId);
+            },
+            error: (err) => {
+                this.toast.error('Error', err?.error?.message ?? 'Failed to remove assignment.');
+                this.unassigning.set(false);
+            },
+        });
     }
 
     onAssign(): void {

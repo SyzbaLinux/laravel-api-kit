@@ -100,6 +100,13 @@ export class TeacherService {
         );
     }
 
+    unassignTeacherFromSubjectInClass(classId: number, subjectId: number): Observable<{ success: boolean; message: string }> {
+        return this.http.post<{ success: boolean; message: string }>(
+            `${environment.apiUrl}/classes/${classId}/assign-subject`,
+            { subject_id: subjectId, teacher_id: null },
+        );
+    }
+
     importFromCsv(file: File): Observable<{ success: boolean; data: { imported: number; errors: string[] }; message: string }> {
         const formData = new FormData();
         formData.append('file', file);

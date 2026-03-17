@@ -29,6 +29,8 @@
     "@ngrx/store": "^21.0.1",
     "apexcharts": "^5.10.3",
     "express": "^5.1.0",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
     "lucide-angular": "^0.577.0",
     "ng-apexcharts": "^2.3.0",
     "ng2-date-picker": "^21.0.1",

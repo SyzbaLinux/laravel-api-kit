@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
-import { LucideAngularModule, LayoutDashboard, Users, BookOpen, MessageSquare, Settings, LogOut, Menu, User, Bell, Search, Building2, BookMarked, Calendar, Clock, School, GraduationCap, HeartHandshake } from 'lucide-angular';
+import { LucideAngularModule, LayoutDashboard, Users, BookOpen, MessageSquare, Settings, LogOut, Menu, User, Bell, Search, Building2, BookMarked, Calendar, Clock, School, GraduationCap, HeartHandshake, ClipboardList, FileText, ListChecks } from 'lucide-angular';
 import { ThemeToggle } from '../../../shared/components/theme-toggle/theme-toggle';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -50,8 +50,8 @@ interface MenuItem {
             </div>
           </div>
           <div class="overflow-hidden transition-all duration-300 whitespace-nowrap">
-            <h1 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Omni Learning</h1>
-            <p class="text-[11px] text-primary-600 dark:text-primary-400 font-medium">School Admin</p>
+            <h1 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate max-w-[140px]">{{ schoolName() ?? 'Omni Learning' }}</h1>
+            <p class="text-[11px] text-primary-600 dark:text-primary-400 font-medium">{{ roleLabel() ?? 'School Admin' }}</p>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ interface MenuItem {
         <!-- Top Header Bar -->
         <header class="sticky top-0 z-20 flex items-center justify-between h-16 px-4 lg:px-6 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg transition-colors duration-300">
           <div class="flex items-center gap-4">
-            <h2 class="text-sm font-semibold text-slate-800 dark:text-white hidden sm:block">School Admin Portal</h2>
+            <h2 class="text-sm font-semibold text-slate-800 dark:text-white hidden sm:block">{{ schoolName() ?? 'School Portal' }}</h2>
           </div>
           <div class="flex items-center gap-3">
             <!-- Search -->
@@ -179,7 +179,7 @@ interface MenuItem {
     }
   `],
 })
-export class TenantLayout {
+export class TenantLayout implements OnInit {
     private readonly authService = inject(AuthService);
     private readonly router = inject(Router);
 
@@ -187,6 +187,8 @@ export class TenantLayout {
 
     readonly userName = computed(() => this.authService.currentUser()?.name ?? 'School Admin');
     readonly userEmail = computed(() => this.authService.currentUser()?.email ?? '');
+    readonly schoolName = computed(() => this.authService.schoolName());
+    readonly roleLabel = computed(() => this.authService.roleLabel());
 
     // Icons
     readonly MenuIcon = Menu;
@@ -205,16 +207,19 @@ export class TenantLayout {
         { label: 'Classes', route: '/tenant/classes', icon: School },
         { label: 'Academic Years', route: '/tenant/academic-years', icon: Calendar },
         { label: 'Timetable', route: '/tenant/timetable', icon: Clock },
+        { label: 'Assessment Types', route: '/tenant/assessment-types', icon: ListChecks },
+        { label: 'Assessments', route: '/tenant/assessments', icon: ClipboardList },
+        { label: 'Report Cards', route: '/tenant/report-cards', icon: FileText },
         { label: 'Learning', route: '/tenant/learning', icon: BookOpen },
         { label: 'Communication', route: '/tenant/communication', icon: MessageSquare },
         { label: 'Settings', route: '/tenant/settings', icon: Settings },
     ];
 
     private readonly roleMenuRoutes: Record<string, string[]> = {
-        school_admin: ['/tenant/dashboard', '/tenant/students', '/tenant/teachers', '/tenant/guardians', '/tenant/departments', '/tenant/subjects', '/tenant/classes', '/tenant/academic-years', '/tenant/timetable', '/tenant/learning', '/tenant/communication', '/tenant/settings'],
-        teacher: ['/tenant/dashboard', '/tenant/classes', '/tenant/subjects', '/tenant/timetable', '/tenant/learning', '/tenant/communication'],
-        class_teacher: ['/tenant/dashboard', '/tenant/classes', '/tenant/subjects', '/tenant/timetable'],
-        hod: ['/tenant/dashboard', '/tenant/departments', '/tenant/subjects', '/tenant/classes', '/tenant/timetable'],
+        school_admin: ['/tenant/dashboard', '/tenant/students', '/tenant/teachers', '/tenant/guardians', '/tenant/departments', '/tenant/subjects', '/tenant/classes', '/tenant/academic-years', '/tenant/timetable', '/tenant/assessment-types', '/tenant/assessments', '/tenant/report-cards', '/tenant/learning', '/tenant/communication', '/tenant/settings'],
+        teacher: ['/tenant/dashboard', '/tenant/classes', '/tenant/subjects', '/tenant/timetable', '/tenant/assessments', '/tenant/report-cards', '/tenant/learning', '/tenant/communication'],
+        class_teacher: ['/tenant/dashboard', '/tenant/classes', '/tenant/subjects', '/tenant/timetable', '/tenant/assessments', '/tenant/report-cards'],
+        hod: ['/tenant/dashboard', '/tenant/departments', '/tenant/subjects', '/tenant/classes', '/tenant/timetable', '/tenant/assessments', '/tenant/report-cards'],
     };
 
     readonly menuItems = computed<MenuItem[]>(() => {
@@ -226,6 +231,13 @@ export class TenantLayout {
         if (!allowed) return this.allMenuItems;
         return this.allMenuItems.filter(item => allowed.includes(item.route));
     });
+
+    ngOnInit(): void {
+        // Refresh user so school_name and role are always current
+        if (!this.authService.schoolName()) {
+            this.authService.me().subscribe({ error: () => {} });
+        }
+    }
 
     toggleMobileMenu(): void {
         this.isMobileOpen.update(v => !v);

@@ -31,6 +31,7 @@ final class UserResource extends JsonResource
                 'display_name' => $this->role->display_name,
             ]),
             'school_id' => $this->school_id,
+            'school_name' => $this->whenLoaded('school', fn () => $this->school?->name),
             'school_education_level' => $this->whenLoaded('school', fn () => $this->school?->education_level?->value),
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),

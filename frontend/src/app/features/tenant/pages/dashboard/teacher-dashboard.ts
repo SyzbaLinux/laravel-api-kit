@@ -4,15 +4,16 @@ import {
 import { RouterLink } from '@angular/router';
 import {
     LucideAngularModule, School, BookMarked, Clock, Users,
-    CheckCircle2, AlertCircle, ChevronRight, Calendar, BookOpen,
+    CheckCircle2, AlertCircle, Calendar, BookOpen,
     GraduationCap, ClipboardList,
 } from 'lucide-angular';
 import { DashboardService, TeacherStats } from '../../services/dashboard.service';
+import { ZbStatCard } from '../../../../shared/components/ui/zb-stat-card';
 
 @Component({
     selector: 'app-teacher-dashboard',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [LucideAngularModule, RouterLink],
+    imports: [LucideAngularModule, RouterLink, ZbStatCard],
     template: `
     <div class="p-6 lg:p-8 space-y-6">
 
@@ -57,56 +58,18 @@ import { DashboardService, TeacherStats } from '../../services/dashboard.service
       @if (!loading() && stats()) {
         <!-- Stat Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-          <!-- Classes I Teach -->
-          <a routerLink="/tenant/classes"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                <lucide-icon [img]="SchoolIcon" [size]="20" class="text-blue-600 dark:text-blue-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.classes_count }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Classes I Teach</p>
+          <a routerLink="/tenant/classes">
+            <zb-stat-card [icon]="SchoolIcon" iconBg="bg-blue-600"
+              [value]="String(stats()!.classes_count)" label="Classes I Teach" />
           </a>
-
-          <!-- Subjects I Teach -->
-          <a routerLink="/tenant/subjects"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
-                <lucide-icon [img]="BookMarkedIcon" [size]="20" class="text-purple-600 dark:text-purple-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.subjects_count }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Subjects I Teach</p>
+          <a routerLink="/tenant/subjects">
+            <zb-stat-card [icon]="BookMarkedIcon" iconBg="bg-purple-600"
+              [value]="String(stats()!.subjects_count)" label="Subjects I Teach" />
           </a>
-
-          <!-- Today's Periods -->
-          <div class="bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                <lucide-icon [img]="ClockIcon" [size]="20" class="text-amber-600 dark:text-amber-400"></lucide-icon>
-              </div>
-              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">TODAY</span>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.today_periods }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Periods Today</p>
-          </div>
-
-          <!-- My Students -->
-          <div class="bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
-                <lucide-icon [img]="UsersIcon" [size]="20" class="text-green-600 dark:text-green-400"></lucide-icon>
-              </div>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.students_count }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Total Students</p>
-          </div>
-
+          <zb-stat-card [icon]="ClockIcon" iconBg="bg-amber-500"
+            [value]="String(stats()!.today_periods)" label="Periods Today" />
+          <zb-stat-card [icon]="UsersIcon" iconBg="bg-green-600"
+            [value]="String(stats()!.students_count)" label="Total Students" />
         </div>
 
         <!-- Main Content: Today's Schedule + My Classes -->
@@ -271,13 +234,14 @@ import { DashboardService, TeacherStats } from '../../services/dashboard.service
 export class TeacherDashboard implements OnInit {
     private readonly dashboardService = inject(DashboardService);
 
+    readonly String = String;
+
     readonly SchoolIcon = School;
     readonly BookMarkedIcon = BookMarked;
     readonly ClockIcon = Clock;
     readonly UsersIcon = Users;
     readonly CheckCircle2Icon = CheckCircle2;
     readonly AlertCircleIcon = AlertCircle;
-    readonly ChevronRightIcon = ChevronRight;
     readonly CalendarIcon = Calendar;
     readonly BookOpenIcon = BookOpen;
     readonly GraduationCapIcon = GraduationCap;

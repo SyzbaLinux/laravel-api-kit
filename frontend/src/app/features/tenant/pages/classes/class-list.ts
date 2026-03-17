@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, OnInit, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, inject, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LucideAngularModule, Plus, School } from 'lucide-angular';
 import { ClassService } from '../../services/class.service';
 import { SchoolClass } from '../../../../core/models/school-admin.models';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { AlertService } from '../../../../shared/services/alert.service';
 import { ZbModal } from '../../../../shared/components/ui/zb-modal';
@@ -23,9 +24,11 @@ import { ZbDatatable, DataTableColumn, DataTableAction } from '../../../../share
           <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Classes</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage school classes and their assignments</p>
         </div>
-        <zb-button [iconLeft]="PlusIcon" (clicked)="openAddModal()" aria-label="Add new class">
-          Add Class
-        </zb-button>
+        @if (isAdmin()) {
+          <zb-button [iconLeft]="PlusIcon" (clicked)="openAddModal()" aria-label="Add new class">
+            Add Class
+          </zb-button>
+        }
       </div>
 
       <!-- Skeleton Loader -->
@@ -54,7 +57,7 @@ import { ZbDatatable, DataTableColumn, DataTableAction } from '../../../../share
           <zb-datatable
             [data]="classes()"
             [columns]="columns"
-            [actions]="tableActions"
+            [actions]="tableActions()"
             trackBy="id" />
         </div>
       }
@@ -124,9 +127,12 @@ export class ClassList implements OnInit {
     private readonly fb = inject(FormBuilder);
     private readonly toast = inject(ToastService);
     private readonly alertService = inject(AlertService);
+    private readonly authService = inject(AuthService);
 
     readonly PlusIcon = Plus;
     readonly SchoolIcon = School;
+
+    readonly isAdmin = computed(() => ['school_admin', 'hod', 'class_teacher'].includes(this.authService.userRole() ?? ''));
 
     // Skeleton layout — column widths mirror the datatable columns
     readonly skeletonCols = ['25%', '15%', '12%', '12%', '18%', '10%'];
@@ -163,11 +169,17 @@ export class ClassList implements OnInit {
         },
     ];
 
-    readonly tableActions: DataTableAction<SchoolClass>[] = [
-        { label: 'View', variant: 'outline', size: 'sm', callback: cls => this.viewClass(cls) },
-        { label: 'Edit', variant: 'outline', size: 'sm', callback: cls => this.editClass(cls) },
-        { label: 'Delete', variant: 'danger', size: 'sm', callback: cls => this.deleteClass(cls) },
-    ];
+    readonly tableActions = computed<DataTableAction<SchoolClass>[]>(() => {
+        const base: DataTableAction<SchoolClass>[] = [
+            { label: 'View', variant: 'outline', size: 'sm', callback: cls => this.viewClass(cls) },
+        ];
+        if (!this.isAdmin()) return base;
+        return [
+            ...base,
+            { label: 'Edit', variant: 'outline', size: 'sm', callback: cls => this.editClass(cls) },
+            { label: 'Delete', variant: 'danger', size: 'sm', callback: cls => this.deleteClass(cls) },
+        ];
+    });
 
     readonly form = this.fb.group({
         name: ['', [Validators.required, Validators.maxLength(255)]],

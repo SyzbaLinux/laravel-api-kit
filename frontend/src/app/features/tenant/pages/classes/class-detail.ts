@@ -6,6 +6,7 @@ import { ClassService } from '../../services/class.service';
 import { SubjectService } from '../../services/subject.service';
 import { DepartmentService } from '../../services/department.service';
 import { StudentService } from '../../services/student.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { SchoolClass, Subject, User as UserModel } from '../../../../core/models/school-admin.models';
 import { Student } from '../../models/user-management.models';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -94,112 +95,199 @@ import { ZbCombobox, ComboboxOption } from '../../../../shared/components/ui/zb-
           </div>
         </div>
 
-        <!-- Assign Class Teacher -->
-        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Class Teacher</h2>
-            <zb-button variant="secondary" size="sm" [iconLeft]="UserCheckIcon" (clicked)="openAssignTeacherModal()">
-              Assign Teacher
-            </zb-button>
-          </div>
-          <div class="px-6 py-4">
-            @if (schoolClass()!.class_teacher) {
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-primary-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                  {{ schoolClass()!.class_teacher!.name.charAt(0).toUpperCase() }}
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ schoolClass()!.class_teacher!.name }}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Class Teacher</p>
-                </div>
-              </div>
-            } @else {
-              <p class="text-sm text-slate-500 dark:text-slate-400">No class teacher assigned</p>
-            }
-          </div>
-        </div>
+        <!-- Tabs -->
+        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800">
 
-        <!-- Enrolled Students -->
-        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-              Enrolled Students
-              <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+          <!-- Tab Bar -->
+          <div class="flex items-center border-b border-slate-200 dark:border-slate-700 px-2" role="tablist">
+            <button
+              role="tab"
+              [attr.aria-selected]="activeTab() === 'teacher'"
+              [attr.aria-controls]="'tab-teacher'"
+              (click)="activeTab.set('teacher')"
+              class="flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+              [class]="activeTab() === 'teacher'
+                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'">
+              <lucide-icon [img]="UserCheckIcon" [size]="15"></lucide-icon>
+              Class Teacher
+            </button>
+            <button
+              role="tab"
+              [attr.aria-selected]="activeTab() === 'students'"
+              [attr.aria-controls]="'tab-students'"
+              (click)="activeTab.set('students')"
+              class="flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+              [class]="activeTab() === 'students'
+                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'">
+              <lucide-icon [img]="UsersIcon" [size]="15"></lucide-icon>
+              Students
+              <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none"
+                [class]="activeTab() === 'students'
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'">
                 {{ enrolledStudents().length }}
               </span>
-            </h2>
-            <zb-button
-              variant="primary"
-              size="sm"
-              [disabled]="studentOptions().length === 0"
-              (clicked)="openEnrollModal()">
-              Enroll Student
-            </zb-button>
+            </button>
+            <button
+              role="tab"
+              [attr.aria-selected]="activeTab() === 'subjects'"
+              [attr.aria-controls]="'tab-subjects'"
+              (click)="activeTab.set('subjects')"
+              class="flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+              [class]="activeTab() === 'subjects'
+                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'">
+              <lucide-icon [img]="BookMarkedIcon" [size]="15"></lucide-icon>
+              Subjects
+              <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none"
+                [class]="activeTab() === 'subjects'
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'">
+                {{ schoolClass()!.subjects?.length ?? 0 }}
+              </span>
+            </button>
           </div>
 
-          @if (enrolledStudents().length === 0) {
-            <div class="px-6 py-10 text-center">
-              <lucide-icon [img]="UsersIcon" [size]="24" class="text-slate-300 dark:text-slate-600 mx-auto mb-2"></lucide-icon>
-              <p class="text-sm text-slate-500 dark:text-slate-400">No students enrolled yet</p>
-            </div>
-          } @else {
-            <div class="divide-y divide-slate-100 dark:divide-slate-800">
-              @for (student of enrolledStudents(); track student.id) {
-                <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          <!-- Tab: Class Teacher -->
+          @if (activeTab() === 'teacher') {
+            <div id="tab-teacher" role="tabpanel">
+              <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-500 dark:text-slate-400">The teacher responsible for overseeing this class.</p>
+                @if (isAdmin()) {
+                  <zb-button variant="secondary" size="sm" [iconLeft]="UserCheckIcon" (clicked)="openAssignTeacherModal()">
+                    Assign Teacher
+                  </zb-button>
+                }
+              </div>
+              <div class="px-6 py-5">
+                @if (schoolClass()!.class_teacher) {
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                      {{ student.name.charAt(0).toUpperCase() }}
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-primary-500 flex items-center justify-center text-white font-bold text-sm shrink-0"
+                      aria-hidden="true">
+                      {{ schoolClass()!.class_teacher!.name.charAt(0).toUpperCase() }}
                     </div>
                     <div>
-                      <p class="text-sm font-medium text-slate-900 dark:text-white">{{ student.name }}</p>
-                      <p class="text-xs text-slate-500 dark:text-slate-400">{{ student.email }}</p>
+                      <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ schoolClass()!.class_teacher!.name }}</p>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">{{ schoolClass()!.class_teacher!.email }}</p>
                     </div>
                   </div>
-                  <zb-button variant="danger" size="sm" (clicked)="unenrollStudent(student)"
-                    [attr.aria-label]="'Unenroll ' + student.name">
-                    Unenroll
+                } @else {
+                  <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <lucide-icon [img]="UserCheckIcon" [size]="24" class="text-slate-300 dark:text-slate-600 mb-2"></lucide-icon>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">No class teacher assigned yet</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Tab: Students -->
+          @if (activeTab() === 'students') {
+            <div id="tab-students" role="tabpanel">
+              <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  {{ enrolledStudents().length }} of {{ schoolClass()!.capacity }} seats filled
+                </p>
+                @if (isAdmin()) {
+                  <zb-button
+                    variant="primary"
+                    size="sm"
+                    [disabled]="studentOptions().length === 0"
+                    (clicked)="openEnrollModal()">
+                    Enroll Student
                   </zb-button>
+                }
+              </div>
+              @if (enrolledStudents().length === 0) {
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                  <lucide-icon [img]="UsersIcon" [size]="24" class="text-slate-300 dark:text-slate-600 mb-2"></lucide-icon>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">No students enrolled yet</p>
+                </div>
+              } @else {
+                <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                  @for (student of enrolledStudents(); track student.id) {
+                    <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs shrink-0"
+                          aria-hidden="true">
+                          {{ student.name.charAt(0).toUpperCase() }}
+                        </div>
+                        <div>
+                          <p class="text-sm font-medium text-slate-900 dark:text-white">{{ student.name }}</p>
+                          <p class="text-xs text-slate-500 dark:text-slate-400">{{ student.email }}</p>
+                        </div>
+                      </div>
+                      @if (isAdmin()) {
+                        <zb-button variant="danger" size="sm" (clicked)="unenrollStudent(student)"
+                          [attr.aria-label]="'Unenroll ' + student.name">
+                          Unenroll
+                        </zb-button>
+                      }
+                    </div>
+                  }
                 </div>
               }
             </div>
           }
-        </div>
 
-        <!-- Assigned Subjects -->
-        <div class="bg-white dark:bg-slate-900 rounded-sm shadow-sm border border-slate-200 dark:border-slate-800">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Assigned Subjects</h2>
-            <zb-button variant="primary" size="sm" (clicked)="openAddSubjectModal()">
-              Add Subject
-            </zb-button>
-          </div>
-
-          @if (!schoolClass()!.subjects || schoolClass()!.subjects!.length === 0) {
-            <div class="px-6 py-12 text-center">
-              <lucide-icon [img]="BookMarkedIcon" [size]="24" class="text-slate-300 dark:text-slate-600 mx-auto mb-2"></lucide-icon>
-              <p class="text-sm text-slate-500 dark:text-slate-400">No subjects assigned yet</p>
-            </div>
-          } @else {
-            <div class="divide-y divide-slate-100 dark:divide-slate-800">
-              @for (subject of schoolClass()!.subjects!; track subject.id) {
-                <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-sm bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0">
-                      <lucide-icon [img]="BookMarkedIcon" [size]="16" class="text-purple-600 dark:text-purple-400"></lucide-icon>
-                    </div>
-                    <div>
-                      <p class="text-sm font-medium text-slate-900 dark:text-white">{{ subject.name }}</p>
-                      <p class="text-xs text-slate-500 dark:text-slate-400">{{ subject.code }}</p>
-                    </div>
-                  </div>
-                  <zb-button variant="danger" size="sm" (clicked)="removeSubject(subject)"
-                    [attr.aria-label]="'Remove ' + subject.name + ' from class'">
-                    Remove
+          <!-- Tab: Subjects -->
+          @if (activeTab() === 'subjects') {
+            <div id="tab-subjects" role="tabpanel">
+              <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Subjects taught in this class.</p>
+                @if (isAdmin()) {
+                  <zb-button variant="primary" size="sm" (clicked)="openAddSubjectModal()">
+                    Add Subject
                   </zb-button>
+                }
+              </div>
+              @if (!schoolClass()!.subjects || schoolClass()!.subjects!.length === 0) {
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                  <lucide-icon [img]="BookMarkedIcon" [size]="24" class="text-slate-300 dark:text-slate-600 mb-2"></lucide-icon>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">No subjects assigned yet</p>
+                </div>
+              } @else {
+                <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                  @for (subject of schoolClass()!.subjects!; track subject.id) {
+                    <div class="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-sm bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0"
+                          aria-hidden="true">
+                          <lucide-icon [img]="BookMarkedIcon" [size]="16" class="text-purple-600 dark:text-purple-400"></lucide-icon>
+                        </div>
+                        <div>
+                          <p class="text-sm font-medium text-slate-900 dark:text-white">{{ subject.name }}</p>
+                          <p class="text-xs text-slate-500 dark:text-slate-400">{{ subject.code }}</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-4">
+                        @if (subjectTeacher(subject); as teacher) {
+                          <div class="hidden sm:flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-accent-500 to-primary-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0"
+                              aria-hidden="true">
+                              {{ teacher.name.charAt(0).toUpperCase() }}
+                            </div>
+                            <span class="text-xs text-slate-600 dark:text-slate-400">{{ teacher.name }}</span>
+                          </div>
+                        } @else {
+                          <span class="hidden sm:inline text-xs text-slate-400 dark:text-slate-600 italic">No teacher</span>
+                        }
+                        @if (isAdmin()) {
+                          <zb-button variant="danger" size="sm" (clicked)="removeSubject(subject)"
+                            [attr.aria-label]="'Remove ' + subject.name + ' from class'">
+                            Remove
+                          </zb-button>
+                        }
+                      </div>
+                    </div>
+                  }
                 </div>
               }
             </div>
           }
+
         </div>
 
       } @else {
@@ -288,6 +376,7 @@ export class ClassDetail implements OnInit {
     private readonly subjectService = inject(SubjectService);
     private readonly departmentService = inject(DepartmentService);
     private readonly studentService = inject(StudentService);
+    private readonly authService = inject(AuthService);
     private readonly fb = inject(FormBuilder);
     private readonly toast = inject(ToastService);
     private readonly alertService = inject(AlertService);
@@ -311,7 +400,17 @@ export class ClassDetail implements OnInit {
     readonly assigningTeacher = signal(false);
     readonly enrolling = signal(false);
 
+    readonly activeTab = signal<'teacher' | 'students' | 'subjects'>('teacher');
+
+    readonly isAdmin = computed(() => ['school_admin', 'hod', 'class_teacher'].includes(this.authService.userRole() ?? ''));
+
     readonly enrolledStudents = computed(() => this.schoolClass()?.students ?? []);
+
+    readonly teacherMap = computed(() => {
+        const map = new Map<number, UserModel>();
+        for (const t of this.teachers()) map.set(t.id, t);
+        return map;
+    });
 
     readonly teacherOptions = computed<ComboboxOption[]>(() =>
         this.teachers().map(t => ({ value: String(t.id), label: t.name, sublabel: t.email }))
@@ -512,6 +611,11 @@ export class ClassDetail implements OnInit {
                 this.toast.error('Error', err?.error?.message ?? 'Failed to unenroll student.');
             },
         });
+    }
+
+    subjectTeacher(subject: Subject): UserModel | null {
+        const id = subject.pivot?.teacher_id;
+        return id != null ? (this.teacherMap().get(id) ?? null) : null;
     }
 
     async removeSubject(subject: Subject): Promise<void> {

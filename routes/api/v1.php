@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AcademicTermController;
 use App\Http\Controllers\Api\V1\AcademicYearController;
+use App\Http\Controllers\Api\V1\AssessmentController;
+use App\Http\Controllers\Api\V1\AssessmentTypeController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DepartmentController;
+use App\Http\Controllers\Api\V1\GradingScaleController;
 use App\Http\Controllers\Api\V1\GuardianController;
 use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\PlatformController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\ReportCardController;
 use App\Http\Controllers\Api\V1\SchoolClassController;
 use App\Http\Controllers\Api\V1\SchoolController;
 use App\Http\Controllers\Api\V1\StudentController;
 use App\Http\Controllers\Api\V1\SubjectController;
+use App\Http\Controllers\Api\V1\SubjectResultController;
 use App\Http\Controllers\Api\V1\SubscriptionPlanController;
 use App\Http\Controllers\Api\V1\TeacherController;
 use App\Http\Controllers\Api\V1\TimetableController;
@@ -115,6 +120,33 @@ Route::middleware(['auth:sanctum', 'throttle:authenticated', 'tenant'])->group(f
     Route::apiResource('guardians', GuardianController::class);
     Route::post('guardians/{guardian}/link-student', [GuardianController::class, 'linkStudent']);
     Route::delete('guardians/{guardian}/unlink-student/{student}', [GuardianController::class, 'unlinkStudent']);
+
+    // Grading Scales
+    Route::apiResource('grading-scales', GradingScaleController::class);
+    Route::post('grading-scales/{gradingScale}/set-default', [GradingScaleController::class, 'setDefault']);
+    Route::post('grading-scales/{gradingScale}/ranges', [GradingScaleController::class, 'syncRanges']);
+
+    // Assessment Types
+    Route::apiResource('assessment-types', AssessmentTypeController::class)->except(['show']);
+
+    // Assessments + Marks
+    Route::apiResource('assessments', AssessmentController::class);
+    Route::get('assessments/{assessment}/marks', [AssessmentController::class, 'marks']);
+    Route::post('assessments/{assessment}/marks/bulk', [AssessmentController::class, 'bulkMarks']);
+
+    // Results
+    Route::post('classes/{schoolClass}/calculate-results', [SubjectResultController::class, 'calculate']);
+    Route::get('classes/{schoolClass}/results', [SubjectResultController::class, 'classResults']);
+    Route::get('students/{student}/results', [SubjectResultController::class, 'studentResults']);
+    Route::patch('subject-results/{subjectResult}/comment', [SubjectResultController::class, 'updateComment']);
+
+    // Report Cards
+    Route::get('classes/{schoolClass}/report-cards', [ReportCardController::class, 'classReportCards']);
+    Route::get('report-cards/{reportCard}', [ReportCardController::class, 'show']);
+    Route::post('report-cards/{reportCard}/approve', [ReportCardController::class, 'approve']);
+    Route::post('report-cards/{reportCard}/publish', [ReportCardController::class, 'publish']);
+    Route::post('report-cards/{reportCard}/unpublish', [ReportCardController::class, 'unpublish']);
+    Route::patch('report-cards/{reportCard}/class-teacher-comment', [ReportCardController::class, 'updateClassTeacherComment']);
 });
 
 // Super Admin routes

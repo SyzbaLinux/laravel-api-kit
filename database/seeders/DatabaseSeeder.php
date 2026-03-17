@@ -35,6 +35,9 @@ final class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PermissionSeeder::class,
             SubscriptionPlanSeeder::class,
+            SchoolSeeder::class,
+            GradingScaleSeeder::class,
+            AssessmentTypeSeeder::class,
         ]);
 
         // Create super admin user

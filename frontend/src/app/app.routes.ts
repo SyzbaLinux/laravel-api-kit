@@ -113,6 +113,33 @@ export const routes: Routes = [
                 path: 'profile',
                 loadComponent: () => import('./features/tenant/pages/profile/profile-page').then(m => m.ProfilePage),
             },
+            // Assessment Types
+            {
+                path: 'assessment-types',
+                loadComponent: () => import('./features/tenant/pages/assessment-types/assessment-type-list').then(m => m.AssessmentTypeList),
+            },
+            // Assessments
+            {
+                path: 'assessments',
+                loadComponent: () => import('./features/tenant/pages/assessments/assessment-list').then(m => m.AssessmentList),
+            },
+            {
+                path: 'assessments/:id/marks',
+                loadComponent: () => import('./features/tenant/pages/assessments/mark-entry').then(m => m.MarkEntry),
+            },
+            // Report Cards
+            {
+                path: 'report-cards',
+                loadComponent: () => import('./features/tenant/pages/report-cards/class-report-cards').then(m => m.ClassReportCards),
+            },
+            {
+                path: 'report-cards/:id',
+                loadComponent: () => import('./features/tenant/pages/report-cards/report-card-detail').then(m => m.ReportCardDetailPage),
+            },
+            {
+                path: 'classes/:classId/report-cards',
+                loadComponent: () => import('./features/tenant/pages/report-cards/class-report-cards').then(m => m.ClassReportCards),
+            },
             // Coming soon pages
             {
                 path: 'learning',

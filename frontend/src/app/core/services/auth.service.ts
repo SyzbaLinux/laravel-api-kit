@@ -21,6 +21,8 @@ export class AuthService {
     readonly isSuperAdmin = computed(() => this.currentUser()?.role?.name === 'super_admin');
     readonly isSchoolAdmin = computed(() => this.currentUser()?.role?.name === 'school_admin');
     readonly schoolEducationLevel = computed(() => this.currentUser()?.school_education_level ?? null);
+    readonly schoolName = computed(() => this.currentUser()?.school_name ?? null);
+    readonly roleLabel = computed(() => this.currentUser()?.role?.display_name ?? this.currentUser()?.role?.name ?? null);
 
     login(email: string, password: string): Observable<AuthResponse> {
         return this.http

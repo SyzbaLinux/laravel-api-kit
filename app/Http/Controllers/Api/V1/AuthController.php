@@ -48,7 +48,7 @@ final class AuthController extends ApiController
             return $this->unauthorized('Invalid credentials');
         }
 
-        $user->load('role');
+        $user->load(['role', 'school']);
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return $this->success([

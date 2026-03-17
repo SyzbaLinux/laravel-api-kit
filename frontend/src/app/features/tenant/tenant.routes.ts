@@ -70,6 +70,26 @@ export const TENANT_ROUTES: Routes = [
         loadComponent: () => import('./pages/profile/profile-page').then(m => m.ProfilePage),
     },
     {
+        path: 'assessments',
+        loadComponent: () => import('./pages/assessments/assessment-list').then(m => m.AssessmentList),
+    },
+    {
+        path: 'assessments/:id/marks',
+        loadComponent: () => import('./pages/assessments/mark-entry').then(m => m.MarkEntry),
+    },
+    {
+        path: 'classes/:classId/report-cards',
+        loadComponent: () => import('./pages/report-cards/class-report-cards').then(m => m.ClassReportCards),
+    },
+    {
+        path: 'report-cards',
+        loadComponent: () => import('./pages/report-cards/class-report-cards').then(m => m.ClassReportCards),
+    },
+    {
+        path: 'report-cards/:id',
+        loadComponent: () => import('./pages/report-cards/report-card-detail').then(m => m.ReportCardDetailPage),
+    },
+    {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',

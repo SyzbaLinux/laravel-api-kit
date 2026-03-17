@@ -7,8 +7,9 @@ import { RouterLink } from '@angular/router';
 import {
     LucideAngularModule, Users, GraduationCap, Building2,
     BookMarked, School, Calendar, Clock, TrendingUp,
-    BookOpen, ChevronRight, AlertCircle, CheckCircle2,
+    BookOpen, AlertCircle, CheckCircle2,
 } from 'lucide-angular';
+import { ZbStatCard } from '../../../../shared/components/ui/zb-stat-card';
 import { DashboardService, SchoolStats } from '../../services/dashboard.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TeacherDashboard } from './teacher-dashboard';
@@ -16,7 +17,7 @@ import { TeacherDashboard } from './teacher-dashboard';
 @Component({
     selector: 'app-tenant-dashboard',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [LucideAngularModule, RouterLink, TeacherDashboard],
+    imports: [LucideAngularModule, RouterLink, TeacherDashboard, ZbStatCard],
     template: `
     @if (isTeacherRole()) {
       <app-teacher-dashboard />
@@ -63,110 +64,38 @@ import { TeacherDashboard } from './teacher-dashboard';
       @if (!loading() && stats()) {
         <!-- Stat Cards Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <!-- Students -->
-          <a routerLink="/tenant/students"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                <lucide-icon [img]="GraduationCapIcon" [size]="20" class="text-blue-600 dark:text-blue-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.students }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Students</p>
+          <a routerLink="/tenant/students">
+            <zb-stat-card [icon]="GraduationCapIcon" iconBg="bg-blue-600"
+              [value]="String(stats()!.students)" label="Students" />
           </a>
-
-          <!-- Teachers -->
-          <a routerLink="/tenant/teachers"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
-                <lucide-icon [img]="UsersIcon" [size]="20" class="text-purple-600 dark:text-purple-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.teachers }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Teachers</p>
+          <a routerLink="/tenant/teachers">
+            <zb-stat-card [icon]="UsersIcon" iconBg="bg-purple-600"
+              [value]="String(stats()!.teachers)" label="Teachers" />
           </a>
-
-          <!-- Classes -->
-          <a routerLink="/tenant/classes"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
-                <lucide-icon [img]="SchoolIcon" [size]="20" class="text-green-600 dark:text-green-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.classes }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Classes</p>
+          <a routerLink="/tenant/classes">
+            <zb-stat-card [icon]="SchoolIcon" iconBg="bg-green-600"
+              [value]="String(stats()!.classes)" label="Classes" />
           </a>
-
-          <!-- Departments -->
-          <a routerLink="/tenant/departments"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                <lucide-icon [img]="Building2Icon" [size]="20" class="text-amber-600 dark:text-amber-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.departments }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Departments</p>
+          <a routerLink="/tenant/departments">
+            <zb-stat-card [icon]="Building2Icon" iconBg="bg-amber-500"
+              [value]="String(stats()!.departments)" label="Departments" />
           </a>
-
-          <!-- Subjects -->
-          <a routerLink="/tenant/subjects"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center">
-                <lucide-icon [img]="BookMarkedIcon" [size]="20" class="text-rose-600 dark:text-rose-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.subjects }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Subjects <span class="text-green-500">({{ stats()!.active_subjects }} active)</span>
-            </p>
+          <a routerLink="/tenant/subjects">
+            <zb-stat-card [icon]="BookMarkedIcon" iconBg="bg-rose-600"
+              [value]="String(stats()!.subjects)"
+              [label]="'Subjects (' + stats()!.active_subjects + ' active)'" />
           </a>
-
-          <!-- Academic Years -->
-          <a routerLink="/tenant/academic-years"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center">
-                <lucide-icon [img]="CalendarIcon" [size]="20" class="text-cyan-600 dark:text-cyan-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.academic_years }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Academic Years</p>
+          <a routerLink="/tenant/academic-years">
+            <zb-stat-card [icon]="CalendarIcon" iconBg="bg-cyan-600"
+              [value]="String(stats()!.academic_years)" label="Academic Years" />
           </a>
-
-          <!-- Terms -->
-          <a routerLink="/tenant/academic-years"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
-                <lucide-icon [img]="BookOpenIcon" [size]="20" class="text-indigo-600 dark:text-indigo-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.terms }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Total Terms</p>
+          <a routerLink="/tenant/academic-years">
+            <zb-stat-card [icon]="BookOpenIcon" iconBg="bg-indigo-600"
+              [value]="String(stats()!.terms)" label="Total Terms" />
           </a>
-
-          <!-- Timetable Entries -->
-          <a routerLink="/tenant/timetable"
-             class="group bg-white dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800 p-5 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition-all">
-            <div class="flex items-start justify-between mb-3">
-              <div class="w-10 h-10 rounded-sm bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
-                <lucide-icon [img]="ClockIcon" [size]="20" class="text-orange-600 dark:text-orange-400"></lucide-icon>
-              </div>
-              <lucide-icon [img]="ChevronRightIcon" [size]="16" class="text-slate-300 group-hover:text-primary-500 transition-colors mt-1"></lucide-icon>
-            </div>
-            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats()!.timetable_entries }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Timetable Periods</p>
+          <a routerLink="/tenant/timetable">
+            <zb-stat-card [icon]="ClockIcon" iconBg="bg-orange-500"
+              [value]="String(stats()!.timetable_entries)" label="Timetable Periods" />
           </a>
         </div>
 
@@ -309,9 +238,9 @@ export class TenantDashboard implements OnInit {
     readonly ClockIcon = Clock;
     readonly TrendingUpIcon = TrendingUp;
     readonly BookOpenIcon = BookOpen;
-    readonly ChevronRightIcon = ChevronRight;
     readonly AlertCircleIcon = AlertCircle;
     readonly CheckCircle2Icon = CheckCircle2;
+    readonly String = String;
 
     readonly stats = signal<SchoolStats | null>(null);
     readonly loading = signal(true);
